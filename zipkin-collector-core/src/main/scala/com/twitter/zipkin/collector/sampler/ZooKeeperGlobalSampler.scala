@@ -16,7 +16,10 @@
  */
 package com.twitter.zipkin.collector.sampler
 
+import java.nio.ByteBuffer
+
 import com.twitter.zipkin.config.sampler.AdjustableRateConfig
+import com.twitter.io.Charsets
 
 /**
  * Get the rate of sample from ZooKeeper so that
@@ -28,7 +31,7 @@ class ZooKeeperGlobalSampler(sampleRateConfig: AdjustableRateConfig) extends Glo
    * True: process trace
    * False: drop trace on the floor
    */
-  override def apply(traceId: Long) : Boolean = {
+  override def apply(traceId: String) : Boolean = {
     if (sample(traceId, sampleRateConfig.get)) {
       SAMPLER_PASSED.incr
       true
@@ -48,15 +51,19 @@ class ZooKeeperGlobalSampler(sampleRateConfig: AdjustableRateConfig) extends Glo
    * In addition, math.abs(Long.MinValue) = Long.MinValue due to overflow,
    * so we treat Long.MinValue as Long.MaxValue
    */
-  def sample(traceId: Long, sampleRate: Double) : Boolean = {
+  def sample(traceId: String, sampleRate: Double) : Boolean = {
     if (sampleRate == 1) {
       true
     } else {
-      val t =
-        if (traceId == Long.MinValue) Long.MaxValue
-        else                          math.abs(traceId)
+      val tId = uuidToLong(traceId)  
+      val t = 
+        if (tId == Long.MinValue) Long.MaxValue
+        else                          math.abs(tId)
       t < Long.MaxValue * sampleRate
     }
   }
 
+  def uuidToLong(uuid: String): Long = {
+      return ByteBuffer.wrap(uuid.getBytes(Charsets.Utf8)).asLongBuffer().get()
+  }
 }

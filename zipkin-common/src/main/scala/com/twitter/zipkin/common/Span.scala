@@ -33,25 +33,17 @@ object Span {
   // TODO(jeff): what?!
   def apply(span: Span): Span = span
 
-  def apply(
-    _traceId: Long,
-    _name: String,
-    _id: Long,
-    _parentId: Option[Long],
-    _annotations: List[Annotation],
-    _binaryAnnotations: Seq[BinaryAnnotation],
-    _debug: Boolean = false
-  ): Span = new Span {
-    def traceId = _traceId
+  def apply(_traceId: String, _name: String, _id: String, _parentId: Option[String], _annotations: List[Annotation], _binaryAnnotations: Seq[BinaryAnnotation], _debug: Boolean = false): Span = new Span {
+    def traceId: String = _traceId
     def name = _name
-    def id = _id
-    def parentId = _parentId
+    def id: String = _id
+    def parentId: Option[String] = _parentId
     def annotations = _annotations
     def binaryAnnotations = _binaryAnnotations
     def debug = _debug
   }
 
-  def unapply(span: Span): Option[(Long, String, Long, Option[Long], List[Annotation], Seq[BinaryAnnotation], Boolean)] =
+  def unapply(span: Span): Option[(String, String, String, Option[String], List[Annotation], Seq[BinaryAnnotation], Boolean)] =
     try {
       Some(
         span.traceId,
@@ -87,23 +79,15 @@ object Span {
  * @param debug if this is set we will make sure this span is stored, no matter what the samplers want
  */
 trait Span { self =>
-  def traceId: Long
+  def traceId: String
   def name: String
-  def id: Long
-  def parentId: Option[Long]
+  def id: String
+  def parentId: Option[String]
   def annotations: List[Annotation]
   def binaryAnnotations: Seq[BinaryAnnotation]
   def debug: Boolean
 
-  def copy(
-    traceId: Long = self.traceId,
-    name: String = self.name,
-    id: Long = self.id,
-    parentId: Option[Long] = self.parentId,
-    annotations: List[Annotation] = self.annotations,
-    binaryAnnotations: Seq[BinaryAnnotation] = self.binaryAnnotations,
-    debug: Boolean = self.debug
-  ): Span = Span(traceId, name, id, parentId, annotations, binaryAnnotations, debug)
+  def copy(traceId: String = self.traceId, name: String = self.name, id: String = self.id, parentId: Option[String] = self.parentId, annotations: List[Annotation] = self.annotations, binaryAnnotations: Seq[BinaryAnnotation] = self.binaryAnnotations, debug: Boolean = self.debug): Span = Span(traceId, name, id, parentId, annotations, binaryAnnotations, debug)
 
   private def tuple = (traceId, name, id, parentId, annotations, binaryAnnotations, debug)
 
@@ -158,9 +142,9 @@ trait Span { self =>
     }
 
     new Span {
-      def traceId = self.traceId
+      def traceId: String = self.traceId
       def name = selectedName
-      def id = self.id
+      def id: String = self.id
       def parentId = self.parentId
       def annotations = self.annotations ++ mergeFrom.annotations
       def binaryAnnotations = self.binaryAnnotations ++ mergeFrom.binaryAnnotations

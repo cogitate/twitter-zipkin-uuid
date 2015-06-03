@@ -15,6 +15,8 @@
  *
  */
 package com.twitter.zipkin.sampler
+import java.nio.ByteBuffer
+import com.twitter.io.Charsets
 
 import com.twitter.finagle.stats.{DefaultStatsReceiver, StatsReceiver}
 import com.twitter.util.{Var, Witness}
@@ -27,7 +29,7 @@ import java.util.concurrent.atomic.AtomicReference
 class Sampler(
   rateVar: Var[Double],
   stats: StatsReceiver = DefaultStatsReceiver.scope("Sampler")
-) extends (Long => Boolean) {
+) extends (String => Boolean) {
   private[this] val rate = new AtomicReference[Double](1.0)
   rateVar.changes.register(Witness(rate))
 
@@ -36,11 +38,12 @@ class Sampler(
   private[this] val deniedCounter = stats.counter("denied")
   private[this] val zerosCounter = stats.counter("zeros")
 
-  def apply(traceId: Long): Boolean = {
+  def apply(traceId: String): Boolean = {
     val curRate = rate.get
 
     val allow = (curRate == 1) || {
-      val t = if (traceId == Long.MinValue) Long.MaxValue else math.abs(traceId)
+      val tId = ByteBuffer.wrap(traceId.getBytes(Charsets.Utf8)).asLongBuffer().get()
+      val t = if (tId == Long.MinValue) Long.MaxValue else math.abs(tId)
       if (t == 0) zerosCounter.incr()
       t > Long.MaxValue * (1 - curRate)
     }

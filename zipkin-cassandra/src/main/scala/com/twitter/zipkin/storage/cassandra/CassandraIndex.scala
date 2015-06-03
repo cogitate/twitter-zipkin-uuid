@@ -35,10 +35,10 @@ case class CassandraIndex(
   keyspace: Keyspace,
   serviceNames: ColumnFamily[String, String, String],
   spanNames: ColumnFamily[String, String, String],
-  serviceNameIndex: ColumnFamily[String, Long, Long],
-  serviceSpanNameIndex: ColumnFamily[String, Long, Long],
-  annotationsIndex: ColumnFamily[ByteBuffer, Long, Long],
-  durationIndex: ColumnFamily[Long, Long, String],
+  serviceNameIndex: ColumnFamily[String, Long, String],
+  serviceSpanNameIndex: ColumnFamily[String, Long, String],
+  annotationsIndex: ColumnFamily[ByteBuffer, Long, String],
+  durationIndex: ColumnFamily[String, Long, String],
   dataTimeToLive: Duration = 3.days
 ) extends Index {
 
@@ -179,13 +179,13 @@ case class CassandraIndex(
     }
   }
 
-  case class TraceIdTimestamp(traceId: Long, timestamp: Option[Long])
+  case class TraceIdTimestamp(traceId: String, timestamp: Option[Long])
 
   /**
    * Fetch the duration or an estimate thereof from the traces.
    */
 
-  def getTracesDuration(traceIds: Seq[Long]): Future[Seq[TraceIdDuration]] = {
+  def getTracesDuration(traceIds: Seq[String]): Future[Seq[TraceIdDuration]] = {
     val startRows = durationIndex.multigetRows(traceIds.toSet.asJava, None, None, Order.Normal, 1)
     val traceStartTimestamp = getTraceIdTimestamp(startRows)
 
@@ -201,7 +201,7 @@ case class CassandraIndex(
   }
 
 
-  private def getTraceIdTimestamp(rowsFuture: Future[JMap[Long, JMap[Long, Column[Long, String]]]]):
+  private def getTraceIdTimestamp(rowsFuture: Future[JMap[String, JMap[Long, Column[Long, String]]]]):
       Future[Iterable[TraceIdTimestamp]] = {
 
     rowsFuture.map { rows =>
@@ -228,11 +228,11 @@ case class CassandraIndex(
     val futures = serviceNames.map(serviceName => {
       WRITE_REQUEST_COUNTER.incr()
       val serviceSpanIndexKey = serviceName + "." + span.name.toLowerCase
-      val serviceSpanIndexCol = Column[Long, Long](timestamp, span.traceId).ttl(dataTimeToLive)
+      val serviceSpanIndexCol = Column[Long, String](timestamp, span.traceId).ttl(dataTimeToLive)
       val serviceSpanNameFuture = serviceSpanNameIndex.insert(serviceSpanIndexKey, serviceSpanIndexCol)
 
       WRITE_REQUEST_COUNTER.incr()
-      val serviceIndexCol = Column[Long, Long](timestamp, span.traceId).ttl(dataTimeToLive)
+      val serviceIndexCol = Column[Long, String](timestamp, span.traceId).ttl(dataTimeToLive)
       val serviceNameFuture = serviceNameIndex.insert(serviceName, serviceIndexCol)
       List(serviceSpanNameFuture, serviceNameFuture)
     }).toList.flatten
@@ -259,7 +259,7 @@ case class CassandraIndex(
       a.host match {
         case Some(endpoint) => {
           WRITE_REQUEST_COUNTER.incr()
-          val col = Column[Long, Long](a.timestamp, span.traceId).ttl(dataTimeToLive)
+          val col = Column[Long, String](a.timestamp, span.traceId).ttl(dataTimeToLive)
           batch.insert(ByteBuffer.wrap(encode(endpoint.serviceName.toLowerCase, a.value.toLowerCase).getBytes), col)
         }
         case None => // Nothin
@@ -271,7 +271,7 @@ case class CassandraIndex(
         case Some(endpoint) => {
           WRITE_REQUEST_COUNTER.incr(2)
           val key = encode(endpoint.serviceName, ba.key).getBytes
-          val col = Column[Long, Long](timestamp, span.traceId).ttl(dataTimeToLive)
+          val col = Column[Long, String](timestamp, span.traceId).ttl(dataTimeToLive)
           batch.insert(ByteBuffer.wrap(key ++ INDEX_DELIMITER.getBytes ++ Util.getArrayFromBuffer(ba.value)), col)
           batch.insert(ByteBuffer.wrap(key), col)
         }

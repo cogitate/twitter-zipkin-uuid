@@ -16,6 +16,6 @@
  */
 package com.twitter.zipkin.query
 
-case class QueryResponse(traceIds: Seq[Long],
+case class QueryResponse(traceIds: Seq[String],
                          startTs: Long,
                          endTs: Long)

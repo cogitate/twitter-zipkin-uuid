@@ -53,20 +53,17 @@ class TraceTest extends FunSuite {
   test("get duration of trace") {
     val annotations = List(Annotation(100, Constants.ClientSend, Some(Endpoint(123, 123, "service1"))),
       Annotation(200, Constants.ClientRecv, Some(Endpoint(123, 123, "service1"))))
-    val span = Span(12345, "methodcall", 666, None,
-      annotations, Nil)
+    val span = Span(12345, "methodcall", 666, None, annotations, Nil)
     assert(Trace(List(span)).duration === 100)
   }
 
   test("get duration of trace without root span") {
     val annotations = List(Annotation(100, Constants.ClientSend, Some(Endpoint(123, 123, "service1"))),
       Annotation(200, Constants.ClientRecv, Some(Endpoint(123, 123, "service1"))))
-    val span = Span(12345, "methodcall", 666, Some(123),
-      annotations, Nil)
+    val span = Span(12345, "methodcall", 666, Some(123), annotations, Nil)
     val annotations2 = List(Annotation(150, Constants.ClientSend, Some(Endpoint(123, 123, "service1"))),
       Annotation(160, Constants.ClientRecv, Some(Endpoint(123, 123, "service1"))))
-    val span2 = Span(12345, "methodcall", 666, Some(123),
-      annotations2, Nil)
+    val span2 = Span(12345, "methodcall", 666, Some(123), annotations2, Nil)
     assert(Trace(List(span, span2)).duration === 100)
   }
 

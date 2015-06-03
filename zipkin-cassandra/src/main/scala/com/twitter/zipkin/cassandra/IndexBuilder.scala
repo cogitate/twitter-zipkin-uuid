@@ -91,12 +91,12 @@ case class IndexBuilder(
      * Column name is the timestamp.
      * Value is the trace id.
      */
-    val serviceNameIndex: ColumnFamily[String, Long, Long] = new StringBucketedColumnFamily(
+    val serviceNameIndex: ColumnFamily[String, Long, String] = new StringBucketedColumnFamily(
       BucketedColumnFamily(
         keyspace,
         serviceNameIndexCf,
         LongCodec,
-        LongCodec,
+        Utf8Codec,
         writeConsistency,
         readConsistency
       ),
@@ -108,7 +108,7 @@ case class IndexBuilder(
      * Column name is the timestamp.
      * Value is the trace id.
      */
-    val serviceSpanNameIndex = keyspace.columnFamily(serviceSpanNameIndexCf, Utf8Codec, LongCodec, LongCodec)
+    val serviceSpanNameIndex = keyspace.columnFamily(serviceSpanNameIndexCf, Utf8Codec, LongCodec, Utf8Codec)
       .consistency(writeConsistency)
       .consistency(readConsistency)
 
@@ -118,12 +118,12 @@ case class IndexBuilder(
      * Column name is the timestamp.
      * Value is the trace id.
      */
-    val annotationsIndex: ColumnFamily[ByteBuffer, Long, Long] = new ByteBufferBucketedColumnFamily(
+    val annotationsIndex: ColumnFamily[ByteBuffer, Long, String] = new ByteBufferBucketedColumnFamily(
       BucketedColumnFamily(
         keyspace,
         annotationsIndexCf,
         LongCodec,
-        LongCodec,
+        Utf8Codec,
         writeConsistency,
         readConsistency
       ),
@@ -135,7 +135,7 @@ case class IndexBuilder(
      * Column name is the timestamp of the span.
      * Value is not used
      */
-    val durationIndex = keyspace.columnFamily(durationIndexCf, LongCodec, LongCodec, Utf8Codec)
+    val durationIndex = keyspace.columnFamily(durationIndexCf, Utf8Codec, LongCodec, Utf8Codec)
       .consistency(writeConsistency)
       .consistency(readConsistency)
 

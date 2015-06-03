@@ -28,7 +28,7 @@ import com.twitter.zipkin.storage.SpanStore
  * set the function will be bypassed and the span stored regardless of the sampling rate.
  */
 class SpanSamplerFilter(
-  sample: Long => Boolean,
+  sample: String => Boolean,
   stats: StatsReceiver = DefaultStatsReceiver.scope("SpanSamplerFilter")
 ) extends SpanStore.Filter {
   private[this] val DebugCounter = stats.counter("debugFlag")

@@ -28,8 +28,7 @@ class SpanTest extends FunSuite {
 
   val annotationValue = "NONSENSE"
   val expectedAnnotation = Annotation(1, annotationValue, Some(Endpoint(1, 2, "service")))
-  val expectedSpan = Span(12345, "methodcall", 666, None,
-    List(expectedAnnotation), Nil)
+  val expectedSpan = Span(12345, "methodcall", 666, None, List(expectedAnnotation), Nil)
 
   val annotation1 = Annotation(1, "value1", Some(Endpoint(1, 2, "service")))
   val annotation2 = Annotation(2, "value2", Some(Endpoint(3, 4, "Service"))) // upper case service name
@@ -38,10 +37,8 @@ class SpanTest extends FunSuite {
   val binaryAnnotation1 = BinaryAnnotation("key1", ByteBuffer.wrap("value1".getBytes), AnnotationType.String, Some(Endpoint(1, 2, "service1")))
   val binaryAnnotation2 = BinaryAnnotation("key2", ByteBuffer.wrap("value2".getBytes), AnnotationType.String, Some(Endpoint(3, 4, "service2")))
 
-  val spanWith3Annotations = Span(12345, "methodcall", 666, None,
-    List(annotation1, annotation2, annotation3), Nil)
-  val spanWith2BinaryAnnotations = Span(12345, "methodcall", 666, None,
-    Nil, List(binaryAnnotation1, binaryAnnotation2))
+  val spanWith3Annotations = Span(12345, "methodcall", 666, None, List(annotation1, annotation2, annotation3), Nil)
+  val spanWith2BinaryAnnotations = Span(12345, "methodcall", 666, None, Nil, List(binaryAnnotation1, binaryAnnotation2))
 
 
   test("serviceNames is lowercase") {

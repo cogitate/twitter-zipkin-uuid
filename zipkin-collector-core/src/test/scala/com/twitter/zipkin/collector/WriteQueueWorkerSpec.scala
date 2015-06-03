@@ -29,7 +29,7 @@ class WriteQueueWorkerSpec extends Specification with JMocker with ClassMocker {
       val queue = mock[BlockingQueue[Span]]
 
       val w = new WriteQueueWorker[Span](queue, service)
-      val span = Span(123, "boo", 456, None, List(Annotation(123, "value", Some(Endpoint(1,2,"service")))), Nil)
+      val span = Span(123, "boo", 456, None, List(Annotation(123, "value", Some(Endpoint(1, 2, "service")))), Nil)
 
       expect {
         one(service).apply(span)

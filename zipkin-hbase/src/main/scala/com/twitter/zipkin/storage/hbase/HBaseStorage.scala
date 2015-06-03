@@ -59,15 +59,15 @@ trait HBaseStorage extends Storage {
    * This is a NO-OP for HBase. when the data is initially put into HBase the ttl starts from the
    * timestamp. See http://hbase.apache.org/book.html#ttl for more information about HBase's TTL Data model.
    */
-  def setTimeToLive(traceId: Long, ttl: Duration): Future[Unit] = Future.Unit
+  def setTimeToLive(traceId: String, ttl: Duration): Future[Unit] = Future.Unit
 
   /**
    * Get the time to live for a specific trace.
    * If there are multiple ttl entries for one trace, pick the lowest one.
    */
-  def getTimeToLive(traceId: Long): Future[Duration] = Future.value(7.days)
+  def getTimeToLive(traceId: String): Future[Duration] = Future.value(7.days)
 
-  def tracesExist(traceIds: Seq[Long]): Future[Set[Long]] = {
+  def tracesExist(traceIds: Seq[String]): Future[Set[String]] = {
     val gets = traceIds.map(createTraceExistsGet)
     val futures: Future[Seq[Result]] = hbaseTable.get(gets)
     futures.map { results =>
@@ -75,14 +75,14 @@ trait HBaseStorage extends Storage {
     }
   }
 
-  private[this] def createTraceExistsGet(traceId: Long): Get = {
+  private[this] def createTraceExistsGet(traceId: String): Get = {
     val g = new Get(Bytes.toBytes(traceId))
     g.addFamily(TableLayouts.storageFamily)
     g.setFilter(new KeyOnlyFilter())
     g
   }
 
-  private[this] def traceExistsResultToTraceId(result: Result): Long = {
+  private[this] def traceExistsResultToTraceId(result: Result): String = {
     traceIdFromRowKey(result.getRow)
   }
 
@@ -91,7 +91,7 @@ trait HBaseStorage extends Storage {
    * Spans in trace should be sorted by the first annotation timestamp
    * in that span. First event should be first in the spans list.
    */
-  def getSpansByTraceIds(traceIds: Seq[Long]): Future[Seq[Seq[Span]]] = {
+  def getSpansByTraceIds(traceIds: Seq[String]): Future[Seq[Seq[Span]]] = {
     hbaseTable.get(createTraceGets(traceIds)).map { rl =>
       rl.map { result =>
         val spans = resultToSpans(Option(result)).sortBy { span => getTimeStamp(span)}
@@ -100,7 +100,7 @@ trait HBaseStorage extends Storage {
     }
   }
 
-  def getSpansByTraceId(traceId: Long): Future[Seq[Span]] = {
+  def getSpansByTraceId(traceId: String): Future[Seq[Span]] = {
     val gets = createTraceGets(List(traceId))
     hbaseTable.get(gets).map { rl =>
       resultToSpans(rl.headOption).sortBy { span => getTimeStamp(span)}
@@ -112,7 +112,7 @@ trait HBaseStorage extends Storage {
    * @param traceIds All of the traceId's that are requested.
    * @return Seq of Get Requests.
    */
-  private[this] def createTraceGets(traceIds: Seq[Long]): Seq[Get] = {
+  private[this] def createTraceGets(traceIds: Seq[String]): Seq[Get] = {
     traceIds.map { id =>
       val g = new Get(Bytes.toBytes(id))
       g.setMaxVersions(1)
@@ -137,7 +137,7 @@ trait HBaseStorage extends Storage {
    */
   def getDataTimeToLive: Int = TableLayouts.storageTTL.inSeconds
 
-  private[this] def traceIdFromRowKey(bytes: Array[Byte]): Long = Bytes.toLong(bytes)
+  private[this] def traceIdFromRowKey(bytes: Array[Byte]): String = Bytes.toString(bytes) //Bytes.toLong(bytes)
 
   private[this] def rowKeyFromSpan(span: Span): Array[Byte] = Bytes.toBytes(span.traceId)
 }

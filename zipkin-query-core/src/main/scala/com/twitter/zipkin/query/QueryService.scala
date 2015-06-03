@@ -207,7 +207,7 @@ class QueryService(
   }
 
   def getTraceIdsBySpanName(serviceName: String, spanName: String, endTs: Long,
-                        limit: Int, order: thriftscala.Order): Future[Seq[Long]] = {
+                        limit: Int, order: thriftscala.Order): Future[Seq[String]] = {
     val method = "getTraceIdsBySpanName"
     log.debug("%s. serviceName: %s spanName: %s endTs: %s limit: %s order: %s".format(method, serviceName, spanName,
       endTs, limit, order))
@@ -234,7 +234,7 @@ class QueryService(
   }
 
   def getTraceIdsByServiceName(serviceName: String, endTs: Long,
-                               limit: Int, order: thriftscala.Order): Future[Seq[Long]] = {
+                               limit: Int, order: thriftscala.Order): Future[Seq[String]] = {
     val method = "getTraceIdsByServiceName"
     log.debug("%s. serviceName: %s endTs: %s limit: %s order: %s".format(method, serviceName, endTs, limit, order))
     call(method) {
@@ -257,7 +257,7 @@ class QueryService(
 
 
   def getTraceIdsByAnnotation(serviceName: String, annotation: String, value: ByteBuffer, endTs: Long,
-                              limit: Int, order: thriftscala.Order): Future[Seq[Long]] = {
+                              limit: Int, order: thriftscala.Order): Future[Seq[String]] = {
     val method = "getTraceIdsByAnnotation"
     log.debug("%s. serviceName: %s annotation: %s value: %s endTs: %s limit: %s order: %s".format(method, serviceName,
       annotation, value, endTs, limit, order))
@@ -283,7 +283,7 @@ class QueryService(
     }
   }
 
-  def tracesExist(traceIds: Seq[Long]): Future[Set[Long]] = {
+  def tracesExist(traceIds: Seq[String]): Future[Set[String]] = {
     log.debug("tracesExist. " + traceIds)
     call("tracesExist") {
       FTrace.recordBinary("numIds", traceIds.length)
@@ -292,7 +292,7 @@ class QueryService(
     }
   }
 
-  def getTracesByIds(traceIds: Seq[Long], adjust: Seq[thriftscala.Adjust]): Future[Seq[thriftscala.Trace]] = {
+  def getTracesByIds(traceIds: Seq[String], adjust: Seq[thriftscala.Adjust]): Future[Seq[thriftscala.Trace]] = {
     log.debug("getTracesByIds. " + traceIds + " adjust " + adjust)
     call("getTracesByIds") {
       val adjusters = getAdjusters(adjust)
@@ -307,7 +307,7 @@ class QueryService(
     }
   }
 
-  def getTraceTimelinesByIds(traceIds: Seq[Long],
+  def getTraceTimelinesByIds(traceIds: Seq[String],
                              adjust: Seq[thriftscala.Adjust]): Future[Seq[thriftscala.TraceTimeline]] = {
     log.debug("getTraceTimelinesByIds. " + traceIds + " adjust " + adjust)
     call("getTraceTimelinesByIds") {
@@ -323,7 +323,7 @@ class QueryService(
     }
   }
 
-  def getTraceSummariesByIds(traceIds: Seq[Long],
+  def getTraceSummariesByIds(traceIds: Seq[String],
                              adjust: Seq[thriftscala.Adjust]): Future[Seq[thriftscala.TraceSummary]] = {
     log.debug("getTraceSummariesByIds. traceIds: " + traceIds + " adjust " + adjust)
     call("getTraceSummariesByIds") {
@@ -339,7 +339,7 @@ class QueryService(
     }
   }
 
-  def getTraceCombosByIds(traceIds: Seq[Long], adjust: Seq[thriftscala.Adjust]): Future[Seq[thriftscala.TraceCombo]] = {
+  def getTraceCombosByIds(traceIds: Seq[String], adjust: Seq[thriftscala.Adjust]): Future[Seq[thriftscala.TraceCombo]] = {
     log.debug("getTraceComboByIds. traceIds: " + traceIds + " adjust " + adjust)
     call("getTraceComboByIds") {
       val adjusters = getAdjusters(adjust)
@@ -375,14 +375,14 @@ class QueryService(
     }
   }
 
-  def setTraceTimeToLive(traceId: Long, ttlSeconds: Int): Future[Unit] = {
+  def setTraceTimeToLive(traceId: String, ttlSeconds: Int): Future[Unit] = {
     log.debug("setTimeToLive: " + traceId + " " + ttlSeconds)
     call("setTraceTimeToLive") {
       storage.setTimeToLive(traceId, ttlSeconds.seconds)
     }
   }
 
-  def getTraceTimeToLive(traceId: Long): Future[Int] = {
+  def getTraceTimeToLive(traceId: String): Future[Int] = {
     log.debug("getTimeToLive: " + traceId)
     call("getTraceTimeToLive") {
       storage.getTimeToLive(traceId).map(_.inSeconds)
@@ -417,14 +417,14 @@ class QueryService(
     timeStamp: Long,
     serverServiceName: String,
     rcpName: String
-  ): Future[Map[String, Seq[Long]]] =
+  ): Future[Map[String, Seq[String]]] =
     Future.exception(new Exception("Not Implemented"))
 
   def getServiceNamesToTraceIds(
     timeStamp: Long,
     serviceName: String,
     rcpName: String
-  ): Future[Map[String, Seq[Long]]] =
+  ): Future[Map[String, Seq[String]]] =
     Future.exception(new Exception("Not Implemented"))
 
   private def checkIfRunning() = {
@@ -481,7 +481,7 @@ class QueryService(
    * Given a sequence of traceIds get their durations
    */
   private def getTraceIdDurations(
-    traceIds: Future[Seq[Long]]
+    traceIds: Future[Seq[String]]
   ): Future[Seq[TraceIdDuration]] = {
     traceIds.map { t =>
       Future.collect {
@@ -493,10 +493,10 @@ class QueryService(
   }
 
   private def sortTraceIds(
-    traceIds: Future[Seq[Long]],
+    traceIds: Future[Seq[String]],
     limit: Int,
     order: thriftscala.Order
-  ): Future[Seq[Long]] = {
+  ): Future[Seq[String]] = {
 
     // No sorting wanted
     if (order == thriftscala.Order.None) {

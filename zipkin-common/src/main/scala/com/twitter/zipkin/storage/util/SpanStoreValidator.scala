@@ -30,6 +30,7 @@ class SpanStoreValidator(
   log: Logger = Logger.get("ValidateSpanStore")
 ) {
   val ep = Endpoint(123, 123, "service")
+  implicit def long2String(l: Long): String = l.toString
 
   def binaryAnnotation(key: String, value: String) =
     BinaryAnnotation(key, ByteBuffer.wrap(value.getBytes), AnnotationType.String, Some(ep))
@@ -44,22 +45,16 @@ class SpanStoreValidator(
   val ann7 = Annotation(7, "custom", Some(ep))
   val ann8 = Annotation(8, "custom", Some(ep))
 
-  val span1 = Span(123, "methodcall", spanId, None, List(ann1, ann3),
-    List(binaryAnnotation("BAH", "BEH")))
-  val span2 = Span(456, "methodcall", spanId, None, List(ann2),
-    List(binaryAnnotation("BAH2", "BEH2")))
-  val span3 = Span(789, "methodcall", spanId, None, List(ann2, ann3, ann4),
-    List(binaryAnnotation("BAH2", "BEH2")))
-  val span4 = Span(999, "methodcall", spanId, None, List(ann6, ann7),
-    List())
-  val span5 = Span(999, "methodcall", spanId, None, List(ann5, ann8),
-    List(binaryAnnotation("BAH2", "BEH2")))
+  val span1 = Span(123, "methodcall", spanId, None, List(ann1, ann3), List(binaryAnnotation("BAH", "BEH")))
+  val span2 = Span(456, "methodcall", spanId, None, List(ann2), List(binaryAnnotation("BAH2", "BEH2")))
+  val span3 = Span(789, "methodcall", spanId, None, List(ann2, ann3, ann4), List(binaryAnnotation("BAH2", "BEH2")))
+  val span4 = Span(999, "methodcall", spanId, None, List(ann6, ann7), List())
+  val span5 = Span(999, "methodcall", spanId, None, List(ann5, ann8), List(binaryAnnotation("BAH2", "BEH2")))
 
   val spanEmptySpanName = Span(123, "", spanId, None, List(ann1, ann2), List())
   val spanEmptyServiceName = Span(123, "spanname", spanId, None, List(), List())
 
-  val mergedSpan = Span(123, "methodcall", spanId, None,
-    List(ann1, ann2), List(binaryAnnotation("BAH2", "BEH2")))
+  val mergedSpan = Span(123, "methodcall", spanId, None, List(ann1, ann2), List(binaryAnnotation("BAH2", "BEH2")))
 
   def resetAndLoadStore(spans: Seq[Span]): SpanStore = {
     val store = newSpanStore
@@ -154,8 +149,7 @@ class SpanStoreValidator(
   }
 
   test("get by trace ids") {
-    val span666 = Span(666, "methodcall2", spanId, None, List(ann2),
-      List(binaryAnnotation("BAH2", "BEH2")))
+    val span666 = Span(666, "methodcall2", spanId, None, List(ann2), List(binaryAnnotation("BAH2", "BEH2")))
 
     val store = resetAndLoadStore(Seq(span1, span666))
     val actual1 = Await.result(store.getSpansByTraceIds(Seq(span1.traceId)))

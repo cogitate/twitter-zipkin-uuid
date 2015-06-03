@@ -22,14 +22,14 @@ import com.twitter.util.Future
  * Collect trace ids and fetch their durations in batches as the trace ids come in.
  */
 class TraceIdsToDuration(index: Index, batchSize: Int) {
-  val ids = new ArrayBuffer[Long]
+  val ids = new ArrayBuffer[String]
   val durationFutures = new ArrayBuffer[Future[Seq[TraceIdDuration]]]
 
   /**
    * Add an id to fetch durations for. If we have a batch send it off
    * to fetch the duration data.
    */
-  def append(id: Long) = synchronized {
+  def append(id: String) = synchronized {
     ids.append(id)
     if (ids.size >= batchSize) {
       durationFutures.append(index.getTracesDuration(ids.distinct))

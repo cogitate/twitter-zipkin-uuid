@@ -49,18 +49,14 @@ class CassandraIndexTest extends FunSuite with BeforeAndAfter with MockitoSugar 
   val ann3 = Annotation(2, "custom", Some(ep))
   val ann4 = Annotation(2, "custom", Some(ep))
 
-  val span1 = Span(123, "methodcall", spanId, None, List(ann1, ann3),
-    List(binaryAnnotation("BAH", "BEH")))
-  val span2 = Span(123, "methodcall", spanId, None, List(ann2),
-    List(binaryAnnotation("BAH2", "BEH2")))
-  val span3 = Span(123, "methodcall", spanId, None, List(ann2, ann3, ann4),
-    List(binaryAnnotation("BAH2", "BEH2")))
+  val span1 = Span(123, "methodcall", spanId, None, List(ann1, ann3), List(binaryAnnotation("BAH", "BEH")))
+  val span2 = Span(123, "methodcall", spanId, None, List(ann2), List(binaryAnnotation("BAH2", "BEH2")))
+  val span3 = Span(123, "methodcall", spanId, None, List(ann2, ann3, ann4), List(binaryAnnotation("BAH2", "BEH2")))
 
   val spanEmptySpanName = Span(123, "", spanId, None, List(ann1, ann2), List())
   val spanEmptyServiceName = Span(123, "spanname", spanId, None, List(), List())
 
-  val mergedSpan = Span(123, "methodcall", spanId, None,
-    List(ann1, ann2), List(binaryAnnotation("BAH2", "BEH2")))
+  val mergedSpan = Span(123, "methodcall", spanId, None, List(ann1, ann2), List(binaryAnnotation("BAH2", "BEH2")))
 
   before {
     FakeServer.start()

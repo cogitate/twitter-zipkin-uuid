@@ -51,7 +51,7 @@ object TraceSummary {
  * @param endpoints endpoints involved in the traced operation
  */
 case class TraceSummary(
-  traceId: Long,
+  traceId: String,
   startTimestamp: Long,
   endTimestamp: Long,
   durationMicro: Int,

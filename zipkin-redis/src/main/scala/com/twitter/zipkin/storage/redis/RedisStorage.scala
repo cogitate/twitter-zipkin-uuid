@@ -34,23 +34,23 @@ trait RedisStorage extends Storage {
 
   override def storeSpan(span: Span): Future[Unit] = spanListMap.put(span.traceId, span).unit
 
-  override def setTimeToLive(traceId: Long, ttl: Duration): Future[Unit] =
+  override def setTimeToLive(traceId: String, ttl: Duration): Future[Unit] =
     spanListMap.setTTL(traceId, ttl).unit
 
-  override def getTimeToLive(traceId: Long): Future[Duration] = spanListMap.getTTL(traceId) map (_.getOrElse(Duration.eternity))
+  override def getTimeToLive(traceId: String): Future[Duration] = spanListMap.getTTL(traceId) map (_.getOrElse(Duration.eternity))
 
-  override def getSpansByTraceId(traceId: Long) : Future[Seq[Span]] =
+  override def getSpansByTraceId(traceId: String) : Future[Seq[Span]] =
     fetchTraceById(traceId) map (_.get)
 
-  override def getSpansByTraceIds(traceIds: Seq[Long]): Future[Seq[Seq[Span]]] =
+  override def getSpansByTraceIds(traceIds: Seq[String]): Future[Seq[Seq[Span]]] =
     Future.collect(traceIds map (traceId => fetchTraceById(traceId))) map (_ flatten)
 
   override def getDataTimeToLive: Int = (ttl map (_.inSeconds)).getOrElse(Int.MaxValue)
 
-  private[this] def fetchTraceById(traceId: Long): Future[Option[Seq[Span]]] =
+  private[this] def fetchTraceById(traceId: String): Future[Option[Seq[Span]]] =
     spanListMap.get(traceId) map (buf => optionify(sortedTrace(buf)))
 
-  override def tracesExist(traceIds: Seq[Long]): Future[Set[Long]] =
+  override def tracesExist(traceIds: Seq[String]): Future[Set[String]] =
     Future.collect(traceIds map {id =>
       spanListMap.exists(id) map { exists =>
         if (exists) Some(id) else None

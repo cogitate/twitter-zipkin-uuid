@@ -16,6 +16,8 @@
  */
 package com.twitter.zipkin.tracegen
 
+import java.util.UUID
+
 import collection.mutable.ListBuffer
 import com.twitter.conversions.time._
 import com.twitter.util.Time
@@ -27,6 +29,7 @@ import scala.util.Random
 
 private object TraceGen {
   val rnd = new Random
+  def random: String = UUID.randomUUID().toString
 
   val serviceNames =
     """vitae ipsum felis lorem magna dolor porta donec augue tortor auctor
@@ -58,10 +61,11 @@ class TraceGen(traces: Int, maxDepth: Int) {
       trace.spans.toSeq
     }
 
+
   private class GenTrace {
-    val traceId = rnd.nextLong
+    val traceId = random
     val spans = new ListBuffer[Span]()
-    def addSpan(name: String, id: Long, parentId: Option[Long], annos: List[Annotation], binAnnos: List[BinaryAnnotation]) {
+    def addSpan(name: String, id: String, parentId: Option[String], annos: List[Annotation], binAnnos: List[BinaryAnnotation]) {
       spans += Span(traceId, name, id, parentId, annos, binAnnos)
     }
   }
@@ -93,8 +97,8 @@ class TraceGen(traces: Int, maxDepth: Int) {
     depth: Int,
     spanName: String,
     ep: Endpoint,
-    spanId: Long = rnd.nextLong,
-    parentSpanId: Option[Long] = None
+    spanId: String = random,
+    parentSpanId: Option[String] = None
   ): Time = {
     var curTime = time + 1.millisecond
 
@@ -117,7 +121,7 @@ class TraceGen(traces: Int, maxDepth: Int) {
       // parallel calls to downstream services
       val times = (0 to (rnd.nextInt(depth) + 1)) map { _ =>
         withEndpoint { nextEp =>
-          val thisSpanId = rnd.nextLong
+          val thisSpanId = random
           val thisParentId = Some(spanId)
           val rpcName = rndRpcName
           val annos = new ListBuffer[Annotation]()

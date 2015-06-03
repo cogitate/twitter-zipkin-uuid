@@ -63,5 +63,5 @@ object TraceTimeline {
  * - binary annotations
  * for a particular trace
  */
-case class TraceTimeline(traceId: Long, rootSpanId: Long, annotations: Seq[TimelineAnnotation],
+case class TraceTimeline(traceId: String, rootSpanId: String, annotations: Seq[TimelineAnnotation],
                          binaryAnnotations: Seq[BinaryAnnotation])

@@ -18,7 +18,7 @@ package com.twitter.zipkin.common.json
 import com.twitter.zipkin.query.TraceCombo
 
 case class JsonTraceCombo(trace: JsonTrace, traceSummary: Option[JsonTraceSummary], traceTimeline: Option[JsonTraceTimeline],
-                          spanDepths: Option[Map[Long, Int]])
+                          spanDepths: Option[Map[String, Int]])
   extends WrappedJson
 
 object JsonTraceCombo {

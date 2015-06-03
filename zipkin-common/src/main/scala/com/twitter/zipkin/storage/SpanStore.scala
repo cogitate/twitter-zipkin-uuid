@@ -40,7 +40,7 @@ object FanoutWriteSpanStore {
     def apply(spans: Seq[Span]): Future[Unit] =
       Future.join(stores map { _(spans) })
 
-    def setTimeToLive(traceId: Long, ttl: Duration): Future[Unit] =
+    def setTimeToLive(traceId: String, ttl: Duration): Future[Unit] =
       Future.join(stores map { _.setTimeToLive(traceId, ttl) })
 
     override def close(deadline: Time): Future[Unit] = closeAwaitably {
@@ -62,16 +62,16 @@ trait WriteSpanStore
   def apply(spans: Seq[Span]): Future[Unit]
 
   // Used for pinning
-  def setTimeToLive(traceId: Long, ttl: Duration): Future[Unit]
+  def setTimeToLive(traceId: String, ttl: Duration): Future[Unit]
 
   protected def shouldIndex(span: Span): Boolean =
     !(span.isClientSide() && span.serviceNames.contains("client"))
 }
 
 trait ReadSpanStore {
-  def getTimeToLive(traceId: Long): Future[Duration]
+  def getTimeToLive(traceId: String): Future[Duration]
 
-  def tracesExist(traceIds: Seq[Long]): Future[Set[Long]]
+  def tracesExist(traceIds: Seq[String]): Future[Set[String]]
 
   /**
    * Get the available trace information from the storage system.
@@ -81,8 +81,8 @@ trait ReadSpanStore {
    * The return list will contain only spans that have been found, thus
    * the return list may not match the provided list of ids.
    */
-  def getSpansByTraceIds(traceIds: Seq[Long]): Future[Seq[Seq[Span]]]
-  def getSpansByTraceId(traceId: Long): Future[Seq[Span]]
+  def getSpansByTraceIds(traceIds: Seq[String]): Future[Seq[Seq[Span]]]
+  def getSpansByTraceId(traceId: String): Future[Seq[Span]]
 
   /**
    * Get the trace ids for this particular service and if provided, span name.
@@ -112,7 +112,7 @@ trait ReadSpanStore {
    * Fetch the duration or an estimate thereof from the traces.
    * Duration returned in micro seconds.
    */
-  def getTracesDuration(traceIds: Seq[Long]): Future[Seq[TraceIdDuration]]
+  def getTracesDuration(traceIds: Seq[String]): Future[Seq[TraceIdDuration]]
 
   /**
    * Get all the service names for as far back as the ttl allows.
@@ -126,7 +126,7 @@ trait ReadSpanStore {
 }
 
 class InMemorySpanStore extends SpanStore {
-  val ttls: mutable.Map[Long, Duration] = mutable.Map.empty
+  val ttls: mutable.Map[String, Duration] = mutable.Map.empty
   val spans: mutable.ArrayBuffer[Span] = new mutable.ArrayBuffer[Span]
 
   private[this] def call[T](f: => T): Future[T] = synchronized { Future(f) }
@@ -147,25 +147,25 @@ class InMemorySpanStore extends SpanStore {
   }.unit
 
   // Used for pinning
-  def setTimeToLive(traceId: Long, ttl: Duration): Future[Unit] = call {
+  def setTimeToLive(traceId: String, ttl: Duration): Future[Unit] = call {
     ttls(traceId) = ttl
   }.unit
 
-  def getTimeToLive(traceId: Long): Future[Duration] = call {
+  def getTimeToLive(traceId: String): Future[Duration] = call {
     ttls(traceId)
   }
 
-  def tracesExist(traceIds: Seq[Long]): Future[Set[Long]] = call {
+  def tracesExist(traceIds: Seq[String]): Future[Set[String]] = call {
     spans.map(_.traceId).toSet & traceIds.toSet
   }
 
-  def getSpansByTraceIds(traceIds: Seq[Long]): Future[Seq[Seq[Span]]] = call {
+  def getSpansByTraceIds(traceIds: Seq[String]): Future[Seq[Seq[Span]]] = call {
     traceIds flatMap { id =>
       Some(spans.filter { _.traceId == id }.toList).filter { _.length > 0 }
     }
   }
 
-  def getSpansByTraceId(traceId: Long): Future[Seq[Span]] = call {
+  def getSpansByTraceId(traceId: String): Future[Seq[Span]] = call {
     spans.filter { _.traceId == traceId }.toList
   }
 
@@ -218,7 +218,7 @@ class InMemorySpanStore extends SpanStore {
     }
   }
 
-  def getTracesDuration(traceIds: Seq[Long]): Future[Seq[TraceIdDuration]] = call {
+  def getTracesDuration(traceIds: Seq[String]): Future[Seq[TraceIdDuration]] = call {
     traceIds.flatMap { traceId =>
       val timestamps = spans.filter { span => span.traceId == traceId }.flatMap { span =>
         Seq(span.firstAnnotation.map { _.timestamp }, span.lastAnnotation.map { _.timestamp }).flatten

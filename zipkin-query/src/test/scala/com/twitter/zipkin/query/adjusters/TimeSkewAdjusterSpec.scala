@@ -51,15 +51,13 @@ class TimeSkewAdjusterTest extends FunSuite {
   val skewAnn2 = Annotation(95, thriftscala.Constants.SERVER_RECV, endpoint2) // skewed
   val skewAnn3 = Annotation(120, thriftscala.Constants.SERVER_SEND, endpoint2) // skewed
   val skewAnn4 = Annotation(135, thriftscala.Constants.CLIENT_RECV, endpoint1)
-  val skewSpan1 = Span(1, "method1", 666, None,
-    List(skewAnn1, skewAnn2, skewAnn3, skewAnn4), Nil)
+  val skewSpan1 = Span(1, "method1", 666, None, List(skewAnn1, skewAnn2, skewAnn3, skewAnn4), Nil)
 
   val skewAnn5 = Annotation(100, thriftscala.Constants.CLIENT_SEND, endpoint2) // skewed
   val skewAnn6 = Annotation(115, thriftscala.Constants.SERVER_RECV, endpoint3)
   val skewAnn7 = Annotation(120, thriftscala.Constants.SERVER_SEND, endpoint3)
   val skewAnn8 = Annotation(115, thriftscala.Constants.CLIENT_RECV, endpoint2) // skewed
-  val skewSpan2 = Span(1, "method2", 777, Some(666),
-    List(skewAnn5, skewAnn6, skewAnn7, skewAnn8), Nil)
+  val skewSpan2 = Span(1, "method2", 777, Some(666), List(skewAnn5, skewAnn6, skewAnn7, skewAnn8), Nil)
 
   val inputTrace = new Trace(List[Span](skewSpan1, skewSpan2))
 
@@ -80,15 +78,13 @@ class TimeSkewAdjusterTest extends FunSuite {
   val expectedAnn2 = Annotation(105, thriftscala.Constants.SERVER_RECV, endpoint2)
   val expectedAnn3 = Annotation(130, thriftscala.Constants.SERVER_SEND, endpoint2)
   val expectedAnn4 = Annotation(135, thriftscala.Constants.CLIENT_RECV, endpoint1)
-  val expectedSpan1 = Span(1, "method1", 666, None,
-    List(expectedAnn1, expectedAnn2, expectedAnn3, expectedAnn4), Nil)
+  val expectedSpan1 = Span(1, "method1", 666, None, List(expectedAnn1, expectedAnn2, expectedAnn3, expectedAnn4), Nil)
 
   val expectedAnn5 = Annotation(110, thriftscala.Constants.CLIENT_SEND, endpoint2)
   val expectedAnn6 = Annotation(115, thriftscala.Constants.SERVER_RECV, endpoint3)
   val expectedAnn7 = Annotation(120, thriftscala.Constants.SERVER_SEND, endpoint3)
   val expectedAnn8 = Annotation(125, thriftscala.Constants.CLIENT_RECV, endpoint2)
-  val expectedSpan2 = Span(1, "method2", 777, Some(666),
-    List(expectedAnn5, expectedAnn6, expectedAnn7, expectedAnn8), Nil)
+  val expectedSpan2 = Span(1, "method2", 777, Some(666), List(expectedAnn5, expectedAnn6, expectedAnn7, expectedAnn8), Nil)
 
   val expectedTrace = new Trace(List[Span](expectedSpan1, expectedSpan2))
 
@@ -108,8 +104,7 @@ class TimeSkewAdjusterTest extends FunSuite {
    */
   val incompleteAnn1 = Annotation(100, thriftscala.Constants.CLIENT_SEND, endpoint1)
   val incompleteAnn4 = Annotation(135, thriftscala.Constants.CLIENT_RECV, endpoint1)
-  val incompleteSpan1 = Span(1, "method1", 666, None,
-    List(incompleteAnn1, incompleteAnn4), Nil)
+  val incompleteSpan1 = Span(1, "method1", 666, None, List(incompleteAnn1, incompleteAnn4), Nil)
 
   val incompleteTrace = new Trace(List[Span](expectedSpan1))
 
@@ -127,16 +122,12 @@ class TimeSkewAdjusterTest extends FunSuite {
   val ann6 = Annotation(87, thriftscala.Constants.CLIENT_RECV, epCassie)
   val ann6F = Annotation(86, thriftscala.Constants.CLIENT_RECV, epCassie)
 
-  val span1a = Span(1, "ValuesFromSource", 2209720933601260005L, None,
-    List(ann3, ann6), Nil)
-  val span1aFixed = Span(1, "ValuesFromSource", 2209720933601260005L, None,
-    List(ann3F, ann6F), Nil)
-  val span1b = Span(1, "ValuesFromSource", 2209720933601260005L, None,
-    List(ann1, ann4), Nil)
+  val span1a = Span(1, "ValuesFromSource", 2209720933601260005L, None, List(ann3, ann6), Nil)
+  val span1aFixed = Span(1, "ValuesFromSource", 2209720933601260005L, None, List(ann3F, ann6F), Nil)
+  val span1b = Span(1, "ValuesFromSource", 2209720933601260005L, None, List(ann1, ann4), Nil)
   // the above two spans are part of the same actual span
 
-  val span2 = Span(1, "multiget_slice", -855543208864892776L, Some(2209720933601260005L),
-    List(ann2, ann5), Nil)
+  val span2 = Span(1, "multiget_slice", -855543208864892776L, Some(2209720933601260005L), List(ann2, ann5), Nil)
 
   val realTrace = new Trace(List(span1a, span1b, span2))
   val expectedRealTrace = new Trace(List(span1aFixed, span1b, span2))

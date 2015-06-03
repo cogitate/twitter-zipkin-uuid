@@ -106,11 +106,11 @@ trait RedisIndex extends Index {
           limit)
     }) map zRangeResultsToSeqIds
 
-  override def getTracesDuration(traceIds: Seq[Long]): Future[Seq[TraceIdDuration]] = Future.collect(
+  override def getTracesDuration(traceIds: Seq[String]): Future[Seq[TraceIdDuration]] = Future.collect(
     traceIds map (getTraceDuration(_))
   ) map (_ flatten)
 
-  private[this] def getTraceDuration(traceId: Long): Future[Option[TraceIdDuration]] =
+  private[this] def getTraceDuration(traceId: String): Future[Option[TraceIdDuration]] =
     traceHash.get(traceId) map {
       _ flatMap { bytes =>
         val TimeRange(start, end) = decodeStartEnd(bytes)

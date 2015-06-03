@@ -286,12 +286,11 @@ class QueryServiceSpec extends Specification with JMocker with ClassMocker {
         Annotation(6873376L, "cr", epKoalabird),
         Annotation(6711797L, "sr", epCuckoo),
         Annotation(6872073L, "ss", epCuckoo)
-        ), Nil)
-      val rs2 = Span(4488677265848750007L, "multiget_slice", 2603914853951996887L,
-        Some(4488677265848750007L), List(
-          Annotation(6712539L, "cs", epCuckooCassie),
-          Annotation(6871825L, "cr", epCuckooCassie)
-        ), Nil)
+      ), Nil)
+      val rs2 = Span(4488677265848750007L, "multiget_slice", 2603914853951996887L, Some(4488677265848750007L), List(
+        Annotation(6712539L, "cs", epCuckooCassie),
+        Annotation(6871825L, "cr", epCuckooCassie)
+      ), Nil)
 
       val realSpans = List(rs1, rs2)
       val realTrace = Trace(realSpans)
@@ -349,12 +348,11 @@ class QueryServiceSpec extends Specification with JMocker with ClassMocker {
         Annotation(832298L, "cr", epKoalabird),
         Annotation(632011L, "sr", epCuckoo),
         Annotation(833041L, "ss", epCuckoo)
-        ), Nil)
-      val rs2 = Span(-6120267009876080004L, "multiget_slice", 3496046180771443122L,
-        Some(-6120267009876080004L), List(
-          Annotation(632711L, "cs", epCuckooCassie),
-          Annotation(832872L, "cr", epCuckooCassie)
-        ), Nil)
+      ), Nil)
+      val rs2 = Span(-6120267009876080004L, "multiget_slice", 3496046180771443122L, Some(-6120267009876080004L), List(
+        Annotation(632711L, "cs", epCuckooCassie),
+        Annotation(832872L, "cr", epCuckooCassie)
+      ), Nil)
 
       val realSpans = List(rs1, rs2)
       val realTrace = Trace(realSpans)

@@ -131,19 +131,19 @@ class AnormSpanStore(
     ))
   }
 
-  def setTimeToLive(traceId: Long, ttl: Duration): Future[Unit] =
+  def setTimeToLive(traceId: String, ttl: Duration): Future[Unit] =
     Future.Done
 
-  def getTimeToLive(traceId: Long): Future[Duration] =
+  def getTimeToLive(traceId: String): Future[Duration] =
     Future.value(Duration.Top)
 
-  private[this] def tracesExistSql(ids: Seq[Long]) = SQL("""
+  private[this] def tracesExistSql(ids: Seq[String]) = SQL("""
     SELECT trace_id FROM zipkin_spans WHERE trace_id IN (%s)
   """.format(ids.mkString(",")))
 
-  def tracesExist(traceIds: Seq[Long]): Future[Set[Long]] = pool {
+  def tracesExist(traceIds: Seq[String]): Future[Set[String]] = pool {
     tracesExistSql(traceIds)
-      .as(long("trace_id") *)
+      .as(str("trace_id") *)
       .toSet
   }
 
@@ -153,31 +153,31 @@ class AnormSpanStore(
       case _ => None
     }
 
-  private[this] def spansSql(ids: Seq[Long]) = SQL("""
+  private[this] def spansSql(ids: Seq[String]) = SQL("""
     |SELECT span_id, parent_id, trace_id, span_name, debug
     |FROM zipkin_spans
     |WHERE trace_id IN (%s)
   """.stripMargin.format(ids.mkString(",")))
 
   private[this] val spansResults = (
-    long("span_id") ~
-    get[Option[Long]]("parent_id") ~
-    long("trace_id") ~
+    str("span_id") ~
+    get[Option[String]]("parent_id") ~
+    str("trace_id") ~
     str("span_name") ~
     int("debug")
   ) map { case sId~pId~tId~sn~d =>
     Span(tId, sn, sId, pId, List.empty, List.empty, d > 0)
   }
 
-  private[this] def annsSql(ids: Seq[Long]) = SQL("""
+  private[this] def annsSql(ids: Seq[String]) = SQL("""
     |SELECT span_id, trace_id, span_name, service_name, value, ipv4, port, a_timestamp, duration
     |FROM zipkin_annotations
     |WHERE trace_id IN (%s)
   """.stripMargin.format(ids.mkString(",")))
 
   private[this] val annsResults = (
-    long("span_id") ~
-    long("trace_id") ~
+    str("span_id") ~
+    str("trace_id") ~
     str("span_name") ~
     str("service_name") ~
     str("value") ~
@@ -189,7 +189,7 @@ class AnormSpanStore(
     (tId, sId) -> Annotation(ts, v, ep(ip, p, svcN), d map Duration.fromNanoseconds)
   }
 
-  private[this] def binAnnsSql(ids: Seq[Long]) = SQL("""
+  private[this] def binAnnsSql(ids: Seq[String]) = SQL("""
     |SELECT span_id, trace_id, span_name, service_name, annotation_key,
     |  annotation_value, annotation_type_value, ipv4, port
     |FROM zipkin_binary_annotations
@@ -197,8 +197,8 @@ class AnormSpanStore(
   """.stripMargin.format(ids.mkString(",")))
 
   private[this] val binAnnsResults = (
-    long("span_id") ~
-    long("trace_id") ~
+    str("span_id") ~
+    str("trace_id") ~
     str("span_name") ~
     str("service_name") ~
     str("annotation_key") ~
@@ -213,7 +213,7 @@ class AnormSpanStore(
   }
 
   // parallel queries here are also a lie (see above).
-  def getSpansByTraceIds(ids: Seq[Long]): Future[Seq[Seq[Span]]] = {
+  def getSpansByTraceIds(ids: Seq[String]): Future[Seq[Seq[Span]]] = {
     val spans = pool {
       spansSql(ids).as(spansResults *)
     } map { _.distinct.groupBy(_.traceId) }
@@ -237,7 +237,7 @@ class AnormSpanStore(
     }
   }
 
-  def getSpansByTraceId(traceId: Long): Future[Seq[Span]] =
+  def getSpansByTraceId(traceId: String): Future[Seq[Span]] =
     getSpansByTraceIds(Seq(traceId)).map(_.head)
 
   private[this] val idsByNameSql = SQL("""
@@ -252,7 +252,7 @@ class AnormSpanStore(
   """.stripMargin)
 
   private[this] val idsByNameResults = (
-    long("trace_id") ~
+    str("trace_id") ~
     long("MAX(a_timestamp)")
   ) map { case a~b => IndexedTraceId(a, b) }
 
@@ -286,7 +286,7 @@ class AnormSpanStore(
   """.stripMargin)
 
   private[this] val byAnnValResult = (
-    long("trace_id") ~
+    str("trace_id") ~
     long("created_ts")
   ) map { case a~b => IndexedTraceId(a, b) }
 
@@ -302,7 +302,7 @@ class AnormSpanStore(
   """.stripMargin)
 
   private[this] val byAnnResult = (
-    long("trace_id") ~
+    str("trace_id") ~
     long("MAX(a_timestamp)")
   ) map { case a~b => IndexedTraceId(a, b) }
 
@@ -332,7 +332,7 @@ class AnormSpanStore(
       }
     }
 
-  private[this] def byDurationSql(ids: Seq[Long]) = SQL("""
+  private[this] def byDurationSql(ids: Seq[String]) = SQL("""
     |SELECT trace_id, duration, created_ts
     |FROM zipkin_spans
     |WHERE trace_id IN (%s) AND created_ts IS NOT NULL
@@ -340,12 +340,12 @@ class AnormSpanStore(
   """.stripMargin.format(ids.mkString(",")))
 
   private[this] val byDurationResults = (
-    long("trace_id") ~
+    str("trace_id") ~
     get[Option[Long]]("duration") ~
     long("created_ts")
   ) map { case a~b~c => TraceIdDuration(a, b.getOrElse(0), c) }
 
-  def getTracesDuration(traceIds: Seq[Long]): Future[Seq[TraceIdDuration]] = pool {
+  def getTracesDuration(traceIds: Seq[String]): Future[Seq[TraceIdDuration]] = pool {
     byDurationSql(traceIds)
       .as(byDurationResults *)
   }

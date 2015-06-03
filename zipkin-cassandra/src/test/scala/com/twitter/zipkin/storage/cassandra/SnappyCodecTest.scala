@@ -32,8 +32,7 @@ class SnappyCodecTest extends FunSuite {
     val expected = Span(123, "boo", 456, None, List(
       new Annotation(1, "bah", Some(Endpoint(23567, 345, "service"))),
       new Annotation(2, thriftscala.Constants.CLIENT_SEND, Some(Endpoint(23567, 345, "service"))),
-      new Annotation(3, thriftscala.Constants.CLIENT_RECV, Some(Endpoint(23567, 345, "service")))),
-      ArrayBuffer())
+      new Annotation(3, thriftscala.Constants.CLIENT_RECV, Some(Endpoint(23567, 345, "service")))), ArrayBuffer())
     val actual = snappyCodec.decode(snappyCodec.encode(expected.toThrift)).toSpan
 
     assert(expected === actual)

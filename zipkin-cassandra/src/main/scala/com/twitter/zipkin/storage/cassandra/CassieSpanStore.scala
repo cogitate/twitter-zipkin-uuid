@@ -91,16 +91,16 @@ class CassieSpanStore(
       value.map { v => IndexDelimiterBytes ++ Util.getArrayFromBuffer(v) }.getOrElse(Array()))
   }
 
-  private[this] def colToIndexedTraceId(cols: Seq[Column[Long, Long]]): Seq[IndexedTraceId] =
+  private[this] def colToIndexedTraceId(cols: Seq[Column[Long, String]]): Seq[IndexedTraceId] =
     cols map { c => IndexedTraceId(traceId = c.value, timestamp = c.name) }
 
   /**
    * Column Families
    * and type aliases to their batch types
    */
-  private type BatchTraces = BatchMutationBuilder[Long, String, Span]
+  private type BatchTraces = BatchMutationBuilder[String, String, Span]
   private[this] val Traces = keyspace
-    .columnFamily(cfs.traces, LongCodec, Utf8Codec, spanCodec)
+    .columnFamily(cfs.traces, Utf8Codec, Utf8Codec, spanCodec)
     .consistency(writeConsistency)
     .consistency(readConsistency)
 
@@ -112,23 +112,29 @@ class CassieSpanStore(
   private[this] val SpanNames = new StringBucketedColumnFamily(
     newBCF(cfs.spanNames, Utf8Codec, Utf8Codec), bucketsCount)
 
-  private type BatchServiceNameIndex = BatchMutationBuilder[String, Long, Long]
+  /** 
+  * lookup cassandra/IndexBuilder for what serviceNameIndex
+  * row-key (service), column-name (timestamp), value (trace id)
+  * String, Long, String
+  */
+  private type BatchServiceNameIndex = BatchMutationBuilder[String, Long, String]
   private[this] val ServiceNameIndex = new StringBucketedColumnFamily(
-    newBCF(cfs.serviceNameIndex, LongCodec, LongCodec), bucketsCount)
+    newBCF(cfs.serviceNameIndex, LongCodec, Utf8Codec), bucketsCount)
 
-  private type BatchServiceSpanNameIndex = BatchMutationBuilder[String, Long, Long]
+  private type BatchServiceSpanNameIndex = BatchMutationBuilder[String, Long, String]
   private[this] val ServiceSpanNameIndex = keyspace
-    .columnFamily(cfs.serviceSpanNameIndex, Utf8Codec, LongCodec, LongCodec)
+    .columnFamily(cfs.serviceSpanNameIndex, Utf8Codec, LongCodec, Utf8Codec)
     .consistency(writeConsistency)
     .consistency(readConsistency)
 
-  private type BatchAnnotationsIndex = BatchMutationBuilder[ByteBuffer, Long, Long]
+  /** from IndexBuilder, this is a timestamp, trace id **/
+  private type BatchAnnotationsIndex = BatchMutationBuilder[ByteBuffer, Long, String]
   private[this] val AnnotationsIndex = new ByteBufferBucketedColumnFamily(
-    newBCF(cfs.annotationsIndex, LongCodec, LongCodec), bucketsCount)
+    newBCF(cfs.annotationsIndex, LongCodec, Utf8Codec), bucketsCount)
 
-  private type BatchDurationIndex = BatchMutationBuilder[Long, Long, String]
+  private type BatchDurationIndex = BatchMutationBuilder[String, Long, String]
   private[this] val DurationIndex = keyspace
-    .columnFamily(cfs.durationIndex, LongCodec, LongCodec, Utf8Codec)
+    .columnFamily(cfs.durationIndex, Utf8Codec, LongCodec, Utf8Codec)
     .consistency(writeConsistency)
     .consistency(readConsistency)
 
@@ -250,7 +256,7 @@ class CassieSpanStore(
     }
   }
 
-  private[this] def getSpansByTraceIds(traceIds: Seq[Long], count: Int): Future[Seq[Seq[Span]]] = {
+  private[this] def getSpansByTraceIds(traceIds: Seq[String], count: Int): Future[Seq[Seq[Span]]] = {
     val results = traceIds.grouped(readBatchSize) map { idBatch =>
       Traces.multigetRows(idBatch.toSet.asJava, None, None, Order.Normal, count) map { rowSet =>
         val rows = rowSet.asScala
@@ -314,7 +320,7 @@ class CassieSpanStore(
     ).map(_.execute())).unit
   }
 
-  def setTimeToLive(traceId: Long, ttl: Duration): Future[Unit] = {
+  def setTimeToLive(traceId: String, ttl: Duration): Future[Unit] = {
     Traces.getRow(traceId) flatMap { row =>
       val traces = Traces.batch()
       row.values.asScala foreach { col =>
@@ -324,7 +330,7 @@ class CassieSpanStore(
     }
   }
 
-  def getTimeToLive(traceId: Long): Future[Duration] = {
+  def getTimeToLive(traceId: String): Future[Duration] = {
     QueryGetTtlCounter.incr()
     Traces.getRow(traceId) flatMap { row =>
       val ttl = row.values.asScala.foldLeft(Int.MaxValue) { (ttl, col) =>
@@ -338,17 +344,17 @@ class CassieSpanStore(
     }
   }
 
-  def tracesExist(traceIds: Seq[Long]): Future[Set[Long]] = {
+  def tracesExist(traceIds: Seq[String]): Future[Set[String]] = {
     QueryTracesExistStat.add(traceIds.size)
     getSpansByTraceIds(traceIds, 1) map {
       _.flatMap(_.headOption.map(_.traceId)).toSet
     }
   }
 
-  def getSpansByTraceId(traceId: Long): Future[Seq[Span]] =
+  def getSpansByTraceId(traceId: String): Future[Seq[Span]] =
     getSpansByTraceIds(Seq(traceId)).map(_.head)
 
-  def getSpansByTraceIds(traceIds: Seq[Long]): Future[Seq[Seq[Span]]] = {
+  def getSpansByTraceIds(traceIds: Seq[String]): Future[Seq[Seq[Span]]] = {
     QueryGetSpansByTraceIdsStat.add(traceIds.size)
     getSpansByTraceIds(traceIds, maxTraceCols)
   }
@@ -374,7 +380,7 @@ class CassieSpanStore(
 
     // if we have a span name, look up in the service + span name index
     // if not, look up by service name only
-    val idx: ColumnFamily[String, Long, Long] =
+    val idx: ColumnFamily[String, Long, String] =
       spanName.map(_ => ServiceSpanNameIndex).getOrElse(ServiceNameIndex)
     // TODO: endTs seems wrong here
     idx.getRowSlice(key, Some(endTs), None, limit, Order.Reversed) map colToIndexedTraceId
@@ -392,7 +398,7 @@ class CassieSpanStore(
     AnnotationsIndex.getRowSlice(key, None, Some(endTs), limit, Order.Reversed) map colToIndexedTraceId
   }
 
-  def getTracesDuration(traceIds: Seq[Long]): Future[Seq[TraceIdDuration]] = {
+  def getTracesDuration(traceIds: Seq[String]): Future[Seq[TraceIdDuration]] = {
     QueryGetTracesDurationStat.add(traceIds.size)
 
     val traceIdSet = traceIds.toSet.asJava

@@ -58,7 +58,7 @@ case class AnormIndex(db: DB, openCon: Option[Connection] = None) extends Index 
    */
   def getTraceIdsByName(serviceName: String, spanName: Option[String],
                         endTs: Long, limit: Int): Future[Seq[IndexedTraceId]] = inNewThread {
-    val result:List[(Long, Long)] = SQL(
+    val result:List[(String, Long)] = SQL(
       """SELECT trace_id, MAX(a_timestamp)
         |FROM zipkin_annotations
         |WHERE service_name = {service_name}
@@ -72,7 +72,8 @@ case class AnormIndex(db: DB, openCon: Option[Connection] = None) extends Index 
       .on("span_name" -> (if (spanName.isEmpty) "" else spanName.get))
       .on("end_ts" -> endTs)
       .on("limit" -> limit)
-      .as((long("trace_id") ~ long("MAX(a_timestamp)") map flatten) *)
+      .as((str("trace_id") ~ long("MAX(a_timestamp)") map flatten) *)
+      //.as((long("trace_id") ~ long("MAX(a_timestamp)") map flatten) *)
     result map { case (tId, ts) =>
       IndexedTraceId(traceId = tId, timestamp = ts)
     }
@@ -90,7 +91,7 @@ case class AnormIndex(db: DB, openCon: Option[Connection] = None) extends Index 
       Seq.empty
     }
     else {
-      val result:List[(Long, Long)] = value match {
+      val result:List[(String, Long)] = value match {
         // Binary annotations
         case Some(bytes) => {
           SQL(
@@ -112,7 +113,8 @@ case class AnormIndex(db: DB, openCon: Option[Connection] = None) extends Index 
             .on("value" -> Util.getArrayFromBuffer(bytes))
             .on("end_ts" -> endTs)
             .on("limit" -> limit)
-            .as((long("trace_id") ~ long("created_ts") map flatten) *)
+            .as((str("trace_id") ~ long("created_ts") map flatten) *)
+            //.as((long("trace_id") ~ long("created_ts") map flatten) *)
         }
         // Normal annotations
         case None => {
@@ -130,7 +132,8 @@ case class AnormIndex(db: DB, openCon: Option[Connection] = None) extends Index 
             .on("annotation" -> annotation)
             .on("end_ts" -> endTs)
             .on("limit" -> limit)
-            .as((long("trace_id") ~ long("MAX(a_timestamp)") map flatten) *)
+            .as((str("trace_id") ~ long("MAX(a_timestamp)") map flatten) *)
+            //.as((long("trace_id") ~ long("MAX(a_timestamp)") map flatten) *)
         }
       }
       result map { case (tId, ts) =>
@@ -144,14 +147,15 @@ case class AnormIndex(db: DB, openCon: Option[Connection] = None) extends Index 
    *
    * Duration returned in microseconds.
    */
-  def getTracesDuration(traceIds: Seq[Long]): Future[Seq[TraceIdDuration]] = inNewThread {
-    val result:List[(Long, Option[Long], Long)] = SQL(
+  def getTracesDuration(traceIds: Seq[String]): Future[Seq[TraceIdDuration]] = inNewThread {
+    val result:List[(String, Option[Long], Long)] = SQL(
       """SELECT trace_id, duration, created_ts
         |FROM zipkin_spans
         |WHERE trace_id IN (%s) AND created_ts IS NOT NULL
         |GROUP BY trace_id
       """.stripMargin.format(traceIds.mkString(",")))
-      .as((long("trace_id") ~ get[Option[Long]]("duration") ~ long("created_ts") map flatten) *)
+      .as((str("trace_id") ~ get[Option[Long]]("duration") ~ long("created_ts") map flatten) *)
+      //.as((long("trace_id") ~ get[Option[Long]]("duration") ~ long("created_ts") map flatten) *)
     result map { case (traceId, duration, startTs) =>
       // trace ID, duration, start TS
       TraceIdDuration(traceId, duration.getOrElse(0), startTs)

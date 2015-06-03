@@ -28,8 +28,9 @@ import com.typesafe.sbt.site.SphinxSupport.Sphinx
 object Zipkin extends Build {
   val zipkinVersion = "1.2.0-SNAPSHOT"
 
-  val finagleVersion = "6.24.0"
-  val utilVersion = "6.23.0"
+  val ostrichVersion = "9.8.0-SNAPSHOT"
+  val finagleVersion = "6.25.0-SNAPSHOT"
+  val utilVersion = "6.24.0-SNAPSHOT"
   val scroogeVersion = "3.17.0"
   val zookeeperVersions = Map(
     "candidate" -> "0.0.41",
@@ -38,7 +39,6 @@ object Zipkin extends Build {
     "server-set" -> "1.0.36"
   )
 
-  val ostrichVersion = "9.7.0"
   val algebirdVersion  = "0.8.1"
   val scaldingVersion = "0.11.2"
   val hbaseVersion = "0.98.3-hadoop2"

@@ -43,8 +43,7 @@ class CassandraStorageTest extends FunSuite with BeforeAndAfter {
   val ann3 = Annotation(2, "custom", Some(ep))
   val ann4 = Annotation(2, "custom", Some(ep))
 
-  val span1 = Span(123, "methodcall", spanId, None, List(ann1, ann3),
-    List(binaryAnnotation("BAH", "BEH")))
+  val span1 = Span(123, "methodcall", spanId, None, List(ann1, ann3), List(binaryAnnotation("BAH", "BEH")))
 
   before {
     FakeServer.start()
@@ -74,8 +73,7 @@ class CassandraStorageTest extends FunSuite with BeforeAndAfter {
     assert(!trace1.spans.isEmpty)
     assert(trace1.spans(0) === span1)
 
-    val span2 = Span(666, "methodcall2", spanId, None, List(ann2),
-      List(binaryAnnotation("BAH2", "BEH2")))
+    val span2 = Span(666, "methodcall2", spanId, None, List(ann2), List(binaryAnnotation("BAH2", "BEH2")))
     Await.result(cassandraStorage.storeSpan(span2))
     val actual2 = Await.result(cassandraStorage.getSpansByTraceIds(List(span1.traceId, span2.traceId)))
     assert(!actual2.isEmpty)

@@ -84,7 +84,7 @@ class Handlers(jsonGenerator: ZipkinJson, mustacheGenerator: ZipkinMustache) {
   private[this] def querySpanDurantions(
     client: ZipkinQuery[Future],
     queryRequest: QueryRequest
-  ): Future[collection.Map[String, Seq[Long]]] = {
+  ): Future[collection.Map[String, Seq[String]]] = {
     client.getSpanDurations(
       queryRequest.endTs,
       queryRequest.serviceName,
@@ -95,7 +95,7 @@ class Handlers(jsonGenerator: ZipkinJson, mustacheGenerator: ZipkinMustache) {
   private[this] def queryServiceNamesToTraceIds(
     client: ZipkinQuery[Future],
     queryRequest: QueryRequest
-  ): Future[collection.Map[String, Seq[Long]]] = {
+  ): Future[collection.Map[String, Seq[String]]] = {
     client.getServiceNamesToTraceIds(
       queryRequest.endTs,
       queryRequest.serviceName,
@@ -315,7 +315,7 @@ class Handlers(jsonGenerator: ZipkinJson, mustacheGenerator: ZipkinMustache) {
 
   private[this] def getExistingTracedId(
     client: ZipkinQuery[Future],
-    traceIds: collection.Map[String, Seq[Long]]): Future[Seq[(String, Seq[Long])]] = {
+    traceIds: collection.Map[String, Seq[String]]): Future[Seq[(String, Seq[String])]] = {
       Future.collect(traceIds.toList.map { case (svcName, traceIds) =>
         client.tracesExist(traceIds) map {(svcName -> _.toSeq)} })
   }
@@ -365,8 +365,9 @@ class Handlers(jsonGenerator: ZipkinJson, mustacheGenerator: ZipkinMustache) {
       }
     }
 
-  private[this] def pathTraceId(id: Option[String]): Option[Long] =
-    id flatMap { SpanId.fromString(_).map(_.toLong) }
+  private[this] def pathTraceId(id: Option[String]): Option[String] =
+    //id flatMap { SpanId.fromString(_).map(_.toLong) }
+    id flatMap { SpanId.fromString(_).map(_.toString) }
 
   trait NotFoundService extends Service[Request, Renderer] {
     def process(req: Request): Option[Future[Renderer]]
@@ -485,7 +486,7 @@ class Handlers(jsonGenerator: ZipkinJson, mustacheGenerator: ZipkinMustache) {
     new NotFoundService {
       private[this] val Err = Future.value(ErrorRenderer(400, "Must be true or false"))
       private[this] val SetState = Future.value(pinTtl.inSeconds)
-      private[this] def togglePinState(traceId: Long, state: Boolean): Future[Boolean] = {
+      private[this] def togglePinState(traceId: String, state: Boolean): Future[Boolean] = {
         val ttl = if (state) SetState else client.getDataTimeToLive()
         ttl flatMap { client.setTraceTimeToLive(traceId, _) } map { _ => state }
       }

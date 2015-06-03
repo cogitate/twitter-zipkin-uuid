@@ -43,7 +43,7 @@ case class StorageBuilder(
 
   def apply() = {
     val keyspace = keyspaceBuilder.connect()
-    val traces = keyspace.columnFamily(columnFamily, LongCodec, Utf8Codec, spanCodec)
+    val traces = keyspace.columnFamily(columnFamily, Utf8Codec, Utf8Codec, spanCodec)
       .consistency(writeConsistency)
       .consistency(readConsistency)
 

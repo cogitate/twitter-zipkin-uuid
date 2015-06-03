@@ -27,7 +27,7 @@ import scala.collection.JavaConverters._
 
 case class CassandraStorage(
   keyspace: Keyspace,
-  traces: ColumnFamily[Long, String, thriftscala.Span],
+  traces: ColumnFamily[String, String, thriftscala.Span],
   readBatchSize: Int,
   dataTimeToLive: Duration
 ) extends Storage {
@@ -63,7 +63,7 @@ case class CassandraStorage(
     traces.insert(traceKey, traceCol).unit
   }
 
-  def setTimeToLive(traceId: Long, ttl: Duration): Future[Unit] = {
+  def setTimeToLive(traceId: String, ttl: Duration): Future[Unit] = {
     val rowFuture = traces.getRow(traceId)
     val batch = traces.batch()
 
@@ -78,7 +78,7 @@ case class CassandraStorage(
     batch.execute().unit
   }
 
-  def getTimeToLive(traceId: Long): Future[Duration] = {
+  def getTimeToLive(traceId: String): Future[Duration] = {
     val rowFuture = traces.getRow(traceId)
     rowFuture map { rows =>
     // fetch the
@@ -98,7 +98,7 @@ case class CassandraStorage(
    * @return a Set of those trace IDs from the list which are stored
    */
 
-  def tracesExist(traceIds: Seq[Long]): Future[Set[Long]] = {
+  def tracesExist(traceIds: Seq[String]): Future[Set[String]] = {
     CASSANDRA_TRACE_EXISTS.incr
     Future.collect {
       traceIds.grouped(readBatchSize).toSeq.map { ids =>
@@ -124,13 +124,13 @@ case class CassandraStorage(
    * Fetches traces from the underlying storage. Note that there might be multiple
    * entries per span.
    */
-  def getSpansByTraceId(traceId: Long): Future[Seq[Span]] = {
+  def getSpansByTraceId(traceId: String): Future[Seq[Span]] = {
     getSpansByTraceIds(Seq(traceId)).map {
       _.head
     }
   }
 
-  def getSpansByTraceIds(traceIds: Seq[Long]): Future[Seq[Seq[Span]]] = {
+  def getSpansByTraceIds(traceIds: Seq[String]): Future[Seq[Seq[Span]]] = {
     CASSANDRA_GET_TRACE.incr
     Future.collect {
       traceIds.grouped(readBatchSize).toSeq.map { ids =>

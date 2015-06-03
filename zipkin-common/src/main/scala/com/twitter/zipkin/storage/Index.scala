@@ -23,10 +23,10 @@ import java.nio.ByteBuffer
 /**
  * Duration of the trace in question in microseconds.
  */
-case class TraceIdDuration(traceId: Long, duration: Long, startTimestamp: Long)
+case class TraceIdDuration(traceId: String, duration: Long, startTimestamp: Long)
 
 /* A trace ID and its associated timestamp */
-case class IndexedTraceId(traceId: Long, timestamp: Long)
+case class IndexedTraceId(traceId: String, timestamp: Long)
 
 trait Index {
 
@@ -54,7 +54,7 @@ trait Index {
    * Fetch the duration or an estimate thereof from the traces.
    * Duration returned in micro seconds.
    */
-  def getTracesDuration(traceIds: Seq[Long]): Future[Seq[TraceIdDuration]]
+  def getTracesDuration(traceIds: Seq[String]): Future[Seq[TraceIdDuration]]
 
   /**
    * Get all the service names for as far back as the ttl allows.

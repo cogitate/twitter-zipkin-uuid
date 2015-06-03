@@ -5,7 +5,7 @@ import cascading.scheme.{Scheme, SinkCall, SourceCall}
 import cascading.tap.Tap
 import cascading.tuple._
 import com.twitter.zipkin.common.Dependencies
-import org.apache.hadoop.io.LongWritable
+import org.apache.hadoop.io.Text
 
 final class StorageScheme extends Scheme[Config, Input, Output, Data, Data]() {
   setSourceFields(Fields.ALL)
@@ -33,7 +33,7 @@ final class StorageScheme extends Scheme[Config, Input, Output, Data, Data]() {
 
   override def sink(flowProcess: FlowProcess[Config], sinkCall: SinkCall[Data, Output]) {
     val dependencies = sinkCall.getOutgoingEntry.getObject(0).asInstanceOf[Dependencies]
-    sinkCall.getOutput.collect(new LongWritable(0L), dependencies)
+    sinkCall.getOutput.collect(new Text("0"), dependencies)
   }
 
   override def sourceConfInit(flowProcess: FlowProcess[Config], tap: Tap[Config, Input, Output], conf: Config) = ()

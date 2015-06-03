@@ -28,13 +28,13 @@ trait RealtimeAggregates extends Closable with CloseAwaitably {
     timeStamp: Time,
     serverServiceName: String,
     rpcName: String
-  ): Future[Map[String, List[Long]]]
+  ): Future[Map[String, List[String]]]
 
   def getServiceNamesToTraceIds(
     timeStamp: Time,
     serverServiceName: String,
     rpcName: String
-  ): Future[Map[String, List[Long]]]
+  ): Future[Map[String, List[String]]]
 }
 
 object NullRealtimeAggregates extends RealtimeAggregates {
@@ -43,8 +43,8 @@ object NullRealtimeAggregates extends RealtimeAggregates {
   }
 
   def getSpanDurations(timeStamp: Time, serverServiceName: String, rpcName: String) =
-    Future.value(Map.empty[String, List[Long]])
+    Future.value(Map.empty[String, List[String]])
 
   def getServiceNamesToTraceIds(timeStamp: Time, serverServiceName: String, rpcName: String) =
-    Future.value(Map.empty[String, List[Long]])
+    Future.value(Map.empty[String, List[String]])
 }

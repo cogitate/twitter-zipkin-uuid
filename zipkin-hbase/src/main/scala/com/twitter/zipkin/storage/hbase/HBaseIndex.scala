@@ -89,7 +89,7 @@ trait HBaseIndex extends Index {
    * Fetch the duration or an estimate thereof from the traces.
    * Duration returned in micro seconds.
    */
-  def getTracesDuration(traceIds: Seq[Long]): Future[Seq[TraceIdDuration]] = {
+  def getTracesDuration(traceIds: Seq[String]): Future[Seq[TraceIdDuration]] = {
     val gets = traceIds.map { traceId =>
       val get = new Get(Bytes.toBytes(traceId))
       get.setMaxVersions(1)
@@ -246,7 +246,7 @@ trait HBaseIndex extends Index {
     val tsBytes = result.getRow.slice(rowLen - Bytes.SIZEOF_LONG, rowLen)
     val ts = Long.MaxValue - Bytes.toLong(tsBytes)
     result.list().asScala.map { kv =>
-      IndexedTraceId(Bytes.toLong(kv.getQualifier), ts)
+      IndexedTraceId(Bytes.toString(kv.getQualifier), ts)
     }
   }
 
@@ -283,7 +283,7 @@ trait HBaseIndex extends Index {
   }
 
   private def durationResultToDuration(result: Result): TraceIdDuration = {
-    val traceId = Bytes.toLong(result.getRow)
+    val traceId = Bytes.toString(result.getRow)
     val durationMap = result.getFamilyMap(TableLayouts.durationDurationFamily).asScala
     val startMap = result.getFamilyMap(TableLayouts.durationStartTimeFamily).asScala
 

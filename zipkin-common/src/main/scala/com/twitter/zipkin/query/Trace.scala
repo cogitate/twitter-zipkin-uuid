@@ -46,7 +46,7 @@ case class Trace(private val s: Seq[Span]) {
    * Find the trace id for this trace.
    * Returns none if we have no spans to look up id by
    */
-  def id: Option[Long] =
+  def id: Option[String] =
     spans.headOption.map(_.traceId)
 
   /**
@@ -58,7 +58,7 @@ case class Trace(private val s: Seq[Span]) {
   /**
    * Find a span by the id. Note that this iterates through all the spans.
    */
-  def getSpanById(spanId: Long): Option[Span] =
+  def getSpanById(spanId: String): Option[Span] =
     spans.find { _.id == spanId }
 
   /**
@@ -74,10 +74,10 @@ case class Trace(private val s: Seq[Span]) {
     }
   }
 
-  def getRootSpans(idSpan: Map[Long, Span] = getIdToSpanMap): Seq[Span] =
+  def getRootSpans(idSpan: Map[String, Span] = getIdToSpanMap): Seq[Span] =
     spans filter { !_.parentId.flatMap(idSpan.get).isDefined }
 
-  private def recursiveGetRootMostSpan(idSpan: Map[Long, Span], prevSpan: Span): Span = {
+  private def recursiveGetRootMostSpan(idSpan: Map[String, Span], prevSpan: Span): Span = {
     // parent id shouldn't be none as then we would have returned already
     val span = for ( id <- prevSpan.parentId; s <- idSpan.get(id) ) yield
       recursiveGetRootMostSpan(idSpan, s)
@@ -144,7 +144,7 @@ case class Trace(private val s: Seq[Span]) {
    * to figure out how to lay out the spans in the visualization.
    * @return span id -> depth in the tree
    */
-  def toSpanDepths: Option[Map[Long, Int]] = {
+  def toSpanDepths: Option[Map[String, Int]] = {
     FTrace.record("toSpanDepths")
     getRootMostSpan match {
       case None => return None
@@ -176,7 +176,7 @@ case class Trace(private val s: Seq[Span]) {
    * faster and simpler. This means we have to merge them correctly on read.
    */
   private def mergeBySpanId(spans: Iterable[Span]): Iterable[Span] = {
-    val spanMap = new mutable.HashMap[Long, Span]
+    val spanMap = new mutable.HashMap[String, Span]
     spans.foreach(s => {
       val oldSpan = spanMap.get(s.id)
       oldSpan match {
@@ -193,8 +193,8 @@ case class Trace(private val s: Seq[Span]) {
   /*
    * Turn the Trace into a map of Span Id -> One or more children Spans
    */
-  def getIdToChildrenMap: mutable.MultiMap[Long, Span] = {
-    val map = new mutable.HashMap[Long, mutable.Set[Span]] with mutable.MultiMap[Long, Span]
+  def getIdToChildrenMap: mutable.MultiMap[String, Span] = {
+    val map = new mutable.HashMap[String, mutable.Set[Span]] with mutable.MultiMap[String, Span]
     for ( s <- spans; pId <- s.parentId ) map.addBinding(pId, s)
     map
   }
@@ -202,13 +202,13 @@ case class Trace(private val s: Seq[Span]) {
   /*
    * Turn the Trace into a map of Span Id -> Span
    */
-  def getIdToSpanMap: Map[Long, Span] =
+  def getIdToSpanMap: Map[String, Span] =
     spans.map { s => (s.id, s) }.toMap
 
   /**
    * Get the spans of this trace in a tree form. SpanTreeEntry wraps a Span and it's children.
    */
-  def getSpanTree(span: Span, idToChildren: mutable.MultiMap[Long, Span]): SpanTreeEntry = {
+  def getSpanTree(span: Span, idToChildren: mutable.MultiMap[String, Span]): SpanTreeEntry = {
     val children = idToChildren.get(span.id)
 
     children match {

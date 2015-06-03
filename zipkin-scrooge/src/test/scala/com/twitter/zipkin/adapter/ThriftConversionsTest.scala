@@ -65,8 +65,7 @@ class ThriftConversionsTest extends FunSuite {
   test("convert Span") {
     val annotationValue = "NONSENSE"
     val expectedAnnotation = Annotation(1, annotationValue, Some(Endpoint(1, 2, "service")))
-    val expectedSpan = Span(12345, "methodcall", 666, None,
-      List(expectedAnnotation), Nil)
+    val expectedSpan = Span(12345, "methodcall", 666, None, List(expectedAnnotation), Nil)
 
     assert(expectedSpan.toThrift.toSpan === expectedSpan)
 
@@ -81,8 +80,7 @@ class ThriftConversionsTest extends FunSuite {
   }
 
   test("convert Trace") {
-    val span = Span(12345, "methodcall", 666, None,
-      List(Annotation(1, "boaoo", None)), Nil)
+    val span = Span(12345, "methodcall", 666, None, List(Annotation(1, "boaoo", None)), Nil)
     val expectedTrace = Trace(List[Span](span))
     val thriftTrace = expectedTrace.toThrift
     val actualTrace = thriftTrace.toTrace

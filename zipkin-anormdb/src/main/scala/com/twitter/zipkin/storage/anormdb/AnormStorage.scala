@@ -125,7 +125,7 @@ case class AnormStorage(db: DB, openCon: Option[Connection] = None) extends Stor
    * Set the ttl of a trace. Used to store a particular trace longer than the
    * default. It must be oh so interesting!
    */
-  def setTimeToLive(traceId: Long, ttl: Duration): Future[Unit] = {
+  def setTimeToLive(traceId: String, ttl: Duration): Future[Unit] = {
     Future.Unit
   }
 
@@ -133,7 +133,7 @@ case class AnormStorage(db: DB, openCon: Option[Connection] = None) extends Stor
    * Get the time to live for a specific trace.
    * If there are multiple ttl entries for one trace, pick the lowest one.
    */
-  def getTimeToLive(traceId: Long): Future[Duration] = {
+  def getTimeToLive(traceId: String): Future[Duration] = {
     Future.value(Duration.Top)
   }
 
@@ -143,10 +143,10 @@ case class AnormStorage(db: DB, openCon: Option[Connection] = None) extends Stor
    * @param traceIds a List of trace IDs
    * @return a Set of those trace IDs from the list which are stored
    */
-  def tracesExist(traceIds: Seq[Long]): Future[Set[Long]] = inNewThread {
+  def tracesExist(traceIds: Seq[String]): Future[Set[String]] = inNewThread {
     SQL(
       "SELECT trace_id FROM zipkin_spans WHERE trace_id IN (%s)".format(traceIds.mkString(","))
-    ).as(long("trace_id") *).toSet
+    ).as(str("trace_id") *).toSet
   }
 
   /**
@@ -154,7 +154,7 @@ case class AnormStorage(db: DB, openCon: Option[Connection] = None) extends Stor
    * Spans in trace should be sorted by the first annotation timestamp
    * in that span. First event should be first in the spans list.
    */
-  def getSpansByTraceIds(traceIds: Seq[Long]): Future[Seq[Seq[Span]]] = inNewThread {
+  def getSpansByTraceIds(traceIds: Seq[String]): Future[Seq[Seq[Span]]] = inNewThread {
     val traceIdsString:String = traceIds.mkString(",")
     val spans:List[DBSpan] =
       SQL(
@@ -162,8 +162,8 @@ case class AnormStorage(db: DB, openCon: Option[Connection] = None) extends Stor
           |FROM zipkin_spans
           |WHERE trace_id IN (%s)
         """.stripMargin.format(traceIdsString))
-        .as((long("span_id") ~ get[Option[Long]]("parent_id") ~
-          long("trace_id") ~ str("span_name") ~ int("debug") map {
+        .as((str("span_id") ~ get[Option[String]]("parent_id") ~
+          str("trace_id") ~ str("span_name") ~ int("debug") map {
             case a~b~c~d~e => DBSpan(a, b, c, d, e > 0)
           }) *)
     val annos:List[DBAnnotation] =
@@ -172,7 +172,7 @@ case class AnormStorage(db: DB, openCon: Option[Connection] = None) extends Stor
           |FROM zipkin_annotations
           |WHERE trace_id IN (%s)
         """.stripMargin.format(traceIdsString))
-        .as((long("span_id") ~ long("trace_id") ~ str("span_name") ~ str("service_name") ~ str("value") ~
+        .as((str("span_id") ~ str("trace_id") ~ str("span_name") ~ str("service_name") ~ str("value") ~
           get[Option[Int]]("ipv4") ~ get[Option[Int]]("port") ~
           long("a_timestamp") ~ get[Option[Long]]("duration") map {
             case a~b~c~d~e~f~g~h~i => DBAnnotation(a, b, c, d, e, f, g, h, i)
@@ -184,7 +184,7 @@ case class AnormStorage(db: DB, openCon: Option[Connection] = None) extends Stor
           |FROM zipkin_binary_annotations
           |WHERE trace_id IN (%s)
         """.stripMargin.format(traceIdsString))
-        .as((long("span_id") ~ long("trace_id") ~ str("span_name") ~ str("service_name") ~
+        .as((str("span_id") ~ str("trace_id") ~ str("span_name") ~ str("service_name") ~
           str("annotation_key") ~ db.bytes("annotation_value") ~
           int("annotation_type_value") ~ get[Option[Int]]("ipv4") ~
           get[Option[Int]]("port") map {
@@ -224,7 +224,7 @@ case class AnormStorage(db: DB, openCon: Option[Connection] = None) extends Stor
     }
     results.filter(!_.isEmpty)
   }
-  def getSpansByTraceId(traceId: Long): Future[Seq[Span]] = {
+  def getSpansByTraceId(traceId: String): Future[Seq[Span]] = {
     getSpansByTraceIds(Seq(traceId)).map {
       _.head
     }
@@ -237,7 +237,7 @@ case class AnormStorage(db: DB, openCon: Option[Connection] = None) extends Stor
     Int.MaxValue
   }
 
-  case class DBSpan(spanId: Long, parentId: Option[Long], traceId: Long, spanName: String, debug: Boolean)
-  case class DBAnnotation(spanId: Long, traceId: Long, spanName: String, serviceName: String, value: String, ipv4: Option[Int], port: Option[Int], timestamp: Long, duration: Option[Long])
-  case class DBBinaryAnnotation(spanId: Long, traceId: Long, spanName: String, serviceName: String, key: String, value: Array[Byte], annotationTypeValue: Int, ipv4: Option[Int], port: Option[Int])
+  case class DBSpan(spanId: String, parentId: Option[String], traceId: String, spanName: String, debug: Boolean)
+  case class DBAnnotation(spanId: String, traceId: String, spanName: String, serviceName: String, value: String, ipv4: Option[Int], port: Option[Int], timestamp: Long, duration: Option[Long])
+  case class DBBinaryAnnotation(spanId: String, traceId: String, spanName: String, serviceName: String, key: String, value: Array[Byte], annotationTypeValue: Int, ipv4: Option[Int], port: Option[Int])
 }

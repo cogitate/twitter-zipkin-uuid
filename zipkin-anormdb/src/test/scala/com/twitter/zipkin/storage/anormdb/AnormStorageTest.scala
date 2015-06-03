@@ -47,10 +47,8 @@ class AnormStorageTest extends FunSuite {
   val ann3 = Annotation(2, "custom", Some(ep))
   val ann4 = Annotation(3, "ss", None)
 
-  val span1 = Span(123, "methodcall", spanId, None, List(ann1, ann3),
-    List(binaryAnnotation("BAH", "BEH")))
-  val span2 = Span(667, "methodcall2", spanId, None, List(ann2),
-    List(binaryAnnotation("BAH2", "BEH2")))
+  val span1 = Span(123, "methodcall", spanId, None, List(ann1, ann3), List(binaryAnnotation("BAH", "BEH")))
+  val span2 = Span(667, "methodcall2", spanId, None, List(ann2), List(binaryAnnotation("BAH2", "BEH2")))
   val span3 = Span(667, "methodcall3", spanId, None, List(ann4), List(binaryAnnotation("KEY", "VALUE")))
 
   val span2and3 = span2 mergeSpan span3

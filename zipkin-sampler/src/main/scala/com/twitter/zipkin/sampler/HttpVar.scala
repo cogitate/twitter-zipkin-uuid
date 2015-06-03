@@ -17,7 +17,7 @@
 package com.twitter.zipkin.sampler
 
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.{HttpMuxer, Request, Response}
+import com.twitter.finagle.httpx.{HttpMuxer, Request, Response}
 import com.twitter.util.{Extractable, Future, Var}
 import org.jboss.netty.handler.codec.http.HttpMethod
 

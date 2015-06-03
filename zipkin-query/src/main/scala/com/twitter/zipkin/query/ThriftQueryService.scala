@@ -46,14 +46,14 @@ class ThriftQueryService(
     case s => Some(s)
   }
 
-  private[this] def getTraceIdDurations(fIds: Future[Seq[Long]]): Future[Seq[TraceIdDuration]] = {
+  private[this] def getTraceIdDurations(fIds: Future[Seq[String]]): Future[Seq[TraceIdDuration]] = {
     fIds flatMap { ids =>
       val ret = ids.grouped(traceDurationFetchBatchSize).toSeq.map(spanStore.getTracesDuration(_))
       Future.collect(ret).map(_.flatten)
     }
   }
 
-  private[this] def sortedTraceIds(traceIds: Future[Seq[IndexedTraceId]], limit: Int, order: thriftscala.Order): Future[Seq[Long]] = {
+  private[this] def sortedTraceIds(traceIds: Future[Seq[IndexedTraceId]], limit: Int, order: thriftscala.Order): Future[Seq[String]] = {
     order match {
       case thriftscala.Order.None =>
         traceIds.map(_.slice(0, limit).map(_.traceId))
@@ -76,7 +76,7 @@ class ThriftQueryService(
     }
   }
 
-  private[this] def sort(traces: Future[Seq[IndexedTraceId]], limit: Int, order: thriftscala.Order): Future[Seq[Long]] =
+  private[this] def sort(traces: Future[Seq[IndexedTraceId]], limit: Int, order: thriftscala.Order): Future[Seq[String]] =
     sortedTraceIds(traces, limit, order)
 
   private[this] def adjustedTraces(traces: Seq[Seq[Span]], adjusts: Seq[thriftscala.Adjust]): Seq[Trace] = {
@@ -202,7 +202,7 @@ class ThriftQueryService(
     endTs: Long,
     limit: Int,
     order: thriftscala.Order
-  ): Future[Seq[Long]] = {
+  ): Future[Seq[String]] = {
     val qr = thriftscala.QueryRequest(serviceName, opt(spanName), None, None, endTs, limit, order)
     handleQuery("getTraceIdsBySpanName", qr) {
       sort(spanStore.getTraceIdsByName(serviceName, qr.spanName, endTs, limit), limit, order)
@@ -214,7 +214,7 @@ class ThriftQueryService(
     endTs: Long,
     limit: Int,
     order: thriftscala.Order
-  ): Future[Seq[Long]] = {
+  ): Future[Seq[String]] = {
     val qr = thriftscala.QueryRequest(serviceName, None, None, None, endTs, limit, order)
     handleQuery("getTraceIdsBySpanName", qr) {
       sort(spanStore.getTraceIdsByName(serviceName, None, endTs, limit), limit, order)
@@ -228,26 +228,26 @@ class ThriftQueryService(
     endTs: Long,
     limit: Int,
     order: thriftscala.Order
-  ): Future[Seq[Long]] = {
+  ): Future[Seq[String]] = {
     val qr = thriftscala.QueryRequest(serviceName, None, None, None, endTs, limit, order)
     handleQuery("getTraceIdsByAnnotation", qr) {
       sort(spanStore.getTraceIdsByAnnotation(serviceName, key, opt(value), endTs, limit), limit, order)
     }
   }
 
-  def tracesExist(traceIds: Seq[Long]): Future[Set[Long]] =
+  def tracesExist(traceIds: Seq[String]): Future[Set[String]] =
     handle("tracesExist") {
       FTrace.recordBinary("numIds", traceIds.length)
       spanStore.tracesExist(traceIds)
     }
 
-  def getTracesByIds(traceIds: Seq[Long], adjust: Seq[thriftscala.Adjust]): Future[Seq[thriftscala.Trace]] =
+  def getTracesByIds(traceIds: Seq[String], adjust: Seq[thriftscala.Adjust]): Future[Seq[thriftscala.Trace]] =
     handle("getTracesByIds") {
       FTrace.recordBinary("numIds", traceIds.length)
       spanStore.getSpansByTraceIds(traceIds) map { adjustedTraces(_, adjust).map(_.toThrift) }
     }
 
-  def getTraceTimelinesByIds(traceIds: Seq[Long], adjust: Seq[thriftscala.Adjust]): Future[Seq[thriftscala.TraceTimeline]] =
+  def getTraceTimelinesByIds(traceIds: Seq[String], adjust: Seq[thriftscala.Adjust]): Future[Seq[thriftscala.TraceTimeline]] =
     handle("getTraceTimelinesByIds") {
       FTrace.recordBinary("numIds", traceIds.length)
       spanStore.getSpansByTraceIds(traceIds) map { traces =>
@@ -255,7 +255,7 @@ class ThriftQueryService(
       }
     }
 
-  def getTraceSummariesByIds(traceIds: Seq[Long], adjust: Seq[thriftscala.Adjust]): Future[Seq[thriftscala.TraceSummary]] =
+  def getTraceSummariesByIds(traceIds: Seq[String], adjust: Seq[thriftscala.Adjust]): Future[Seq[thriftscala.TraceSummary]] =
     handle("getTraceSummariesByIds") {
       FTrace.recordBinary("numIds", traceIds.length)
       spanStore.getSpansByTraceIds(traceIds) map { traces =>
@@ -263,7 +263,7 @@ class ThriftQueryService(
       }
     }
 
-  def getTraceCombosByIds(traceIds: Seq[Long], adjust: Seq[thriftscala.Adjust]): Future[Seq[thriftscala.TraceCombo]] =
+  def getTraceCombosByIds(traceIds: Seq[String], adjust: Seq[thriftscala.Adjust]): Future[Seq[thriftscala.TraceCombo]] =
     handle("getTraceCombosByIds") {
       FTrace.recordBinary("numIds", traceIds.length)
       spanStore.getSpansByTraceIds(traceIds) map { traces =>
@@ -287,12 +287,12 @@ class ThriftQueryService(
       spanStore.getSpanNames(serviceName)
     }
 
-  def setTraceTimeToLive(traceId: Long, ttl: Int): Future[Unit] =
+  def setTraceTimeToLive(traceId: String, ttl: Int): Future[Unit] =
     handle("setTraceTimeToLive") {
       spanStore.setTimeToLive(traceId, ttl.seconds)
     }
 
-  def getTraceTimeToLive(traceId: Long): Future[Int] =
+  def getTraceTimeToLive(traceId: String): Future[Int] =
     handle("getTraceTimeToLive") {
       spanStore.getTimeToLive(traceId).map(_.inSeconds)
     }
@@ -318,7 +318,7 @@ class ThriftQueryService(
     timeStamp: Long,
     serverServiceName: String,
     rpcName: String
-  ): Future[Map[String, List[Long]]] =
+  ): Future[Map[String, List[String]]] =
     handle("getSpanDurations") {
       val time = Time.fromMicroseconds(timeStamp)
       realtimeStore.getSpanDurations(time, serverServiceName, rpcName)
@@ -328,7 +328,7 @@ class ThriftQueryService(
     timeStamp: Long,
     serverServiceName: String,
     rpcName: String
-  ): Future[Map[String, List[Long]]] =
+  ): Future[Map[String, List[String]]] =
     handle("getServiceNamesToTraceIds") {
       val time = Time.fromMicroseconds(timeStamp)
       realtimeStore.getServiceNamesToTraceIds(time, serverServiceName, rpcName)

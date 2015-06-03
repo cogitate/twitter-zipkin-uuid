@@ -11,6 +11,7 @@ import com.twitter.zipkin.storage.cassandra.{CassandraStorage, CassieSpanStoreDe
 import org.apache.cassandra.finagle.thrift
 import org.apache.cassandra.finagle.thrift.{ColumnParent, ConsistencyLevel, KeyRange, KeySlice}
 import org.apache.hadoop.io.LongWritable
+import org.apache.hadoop.io.Text
 import org.apache.hadoop.mapred.{JobConf, Reporter}
 
 import scala.collection.JavaConverters._
@@ -72,7 +73,8 @@ final class StorageRecordReader(inputSplit: StorageInputSplit, jobConf: JobConf,
 
   override def getPos: Long = pos.toLong
 
-  override def createKey(): Key = new LongWritable()
+  //override def createKey(): Key = new LongWritable()
+  override def createKey(): Key = new Text()
 
   private val valueBufferSize = 8192
 

@@ -7,6 +7,9 @@ import Keys._
  */
 object ZipkinResolver extends Plugin {
 
+  val ostrichVersion = "9.8.0-SNAPSHOT"
+  val finagleVersion = "6.25.0-SNAPSHOT"
+  val utilVersion = "6.24.0-SNAPSHOT"
   val proxyRepo = Option(System.getenv("SBT_PROXY_REPO"))
 
   val defaultResolvers = SettingKey[Seq[Resolver]](
@@ -37,22 +40,24 @@ object ZipkinResolver extends Plugin {
       "conjars.org" at "http://conjars.org/repo"
     ),
 
-    localRepo := file(System.getProperty("user.home") + "/.m2/repository"),
+    localRepo := file(System.getProperty("user.home") + "/.ivy2/local"),
+
 
     // configure resolvers for the build
     resolvers <<= (resolvers, defaultResolvers, localRepo)
     { (resolvers, defaultResolvers, localRepo) =>
-      (proxyRepo map { url =>
-        Seq("proxy-repo" at url)
-      } getOrElse {
+      ({
         resolvers ++ defaultResolvers
       }) ++ Seq(
         // the local repo has to be in here twice, because sbt won't push to a "file:"
         // repo, but it won't read artifacts from a "Resolver.file" repo. (head -> desk)
         "local-lookup" at ("file:" + localRepo.getAbsolutePath),
-        Resolver.file("local", localRepo)(Resolver.mavenStylePatterns)
+        Resolver.file("Local repo", file(System.getProperty("user.home") + "/.ivy2/local"))(Resolver.ivyStylePatterns)
       )
     },
+
+    dependencyOverrides += "com.twitter" % "ostrich" % ostrichVersion,
+    dependencyOverrides += "com.twitter" % "util-core" % utilVersion,
 
     // don't add any special resolvers.
     externalResolvers <<= (resolvers) map identity

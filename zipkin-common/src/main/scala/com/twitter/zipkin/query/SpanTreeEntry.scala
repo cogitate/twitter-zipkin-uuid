@@ -44,7 +44,7 @@ case class SpanTreeEntry(span: Span, children: List[SpanTreeEntry]) {
    * @param startDepth Start with this span at this depth
    * @return SpanId to depth level
    */
-  def depths(startDepth: Int): Map[Long, Int] = {
+  def depths(startDepth: Int): Map[String, Int] = {
     // start out with this span's depth (at startDepth)
     // fold in the childrens depth (increase the current one by 1)
     children.foldLeft(Map(span.id -> startDepth))((prevMap, child) =>

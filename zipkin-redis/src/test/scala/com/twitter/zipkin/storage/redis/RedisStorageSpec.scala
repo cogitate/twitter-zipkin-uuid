@@ -41,8 +41,7 @@ class RedisStorageSpec extends RedisSpecification {
   val ann3 = Annotation(2, "custom", Some(ep))
   val ann4 = Annotation(2, "custom", Some(ep))
 
-  val span1 = Span(123, "methodcall", spanId, None, List(ann1, ann3),
-    List(binaryAnnotation("BAH", "BEH")))
+  val span1 = Span(123, "methodcall", spanId, None, List(ann1, ann3), List(binaryAnnotation("BAH", "BEH")))
 
   "RedisStorage" should {
 
@@ -72,8 +71,7 @@ class RedisStorageSpec extends RedisSpecification {
       actual1(0).isEmpty mustEqual false
       actual1(0)(0) mustEqual span1
 
-      val span2 = Span(666, "methodcall2", spanId, None, List(ann2),
-        List(binaryAnnotation("BAH2", "BEH2")))
+      val span2 = Span(666, "methodcall2", spanId, None, List(ann2), List(binaryAnnotation("BAH2", "BEH2")))
       redisStorage.storeSpan(span2)()
       val actual2 = redisStorage.getSpansByTraceIds(List(span1.traceId, span2.traceId))()
       actual2.isEmpty mustEqual false

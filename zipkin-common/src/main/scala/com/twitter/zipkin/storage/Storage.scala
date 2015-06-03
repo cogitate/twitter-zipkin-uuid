@@ -36,15 +36,15 @@ trait Storage {
    * Set the ttl of a trace. Used to store a particular trace longer than the
    * default. It must be oh so interesting!
    */
-  def setTimeToLive(traceId: Long, ttl: Duration): Future[Unit]
+  def setTimeToLive(traceId: String, ttl: Duration): Future[Unit]
 
   /**
    * Get the time to live for a specific trace.
    * If there are multiple ttl entries for one trace, pick the lowest one.
    */
-  def getTimeToLive(traceId: Long): Future[Duration]
+  def getTimeToLive(traceId: String): Future[Duration]
 
-  def tracesExist(traceIds: Seq[Long]): Future[Set[Long]]
+  def tracesExist(traceIds: Seq[String]): Future[Set[String]]
 
   /**
    * Get the available trace information from the storage system.
@@ -54,8 +54,8 @@ trait Storage {
    * The return list will contain only spans that have been found, thus
    * the return list may not match the provided list of ids.
    */
-  def getSpansByTraceIds(traceIds: Seq[Long]): Future[Seq[Seq[Span]]]
-  def getSpansByTraceId(traceId: Long): Future[Seq[Span]]
+  def getSpansByTraceIds(traceIds: Seq[String]): Future[Seq[Seq[Span]]]
+  def getSpansByTraceId(traceId: String): Future[Seq[Span]]
   /**
    * How long do we store the data before we delete it? In seconds.
    */

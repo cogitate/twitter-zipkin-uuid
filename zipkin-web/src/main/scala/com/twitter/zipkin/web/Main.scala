@@ -47,9 +47,10 @@ trait ZipkinWebFactory { self: App =>
     "js" -> "application/javascript"
   )
 
-  val webServerPort = flag("zipkin.web.port", new InetSocketAddress(8080), "Listening port for the zipkin web frontend")
+  //val webServerPort = flag("zipkin.web.port", new InetSocketAddress(8080), "Listening port for the zipkin web frontend")
+  val webServerPort = flag("zipkin.web.port", new InetSocketAddress(49001), "Listening port for the zipkin web frontend")
 
-  val webRootUrl = flag("zipkin.web.rootUrl", "http://localhost:8080/", "Url where the service is located")
+  val webRootUrl = flag("zipkin.web.rootUrl", "http://localhost:49001/", "Url where the service is located")
   val webCacheResources = flag("zipkin.web.cacheResources", false, "cache static resources and mustache templates")
   val webResourcesRoot = flag("zipkin.web.resourcesRoot", "zipkin-web/src/main/resources", "on-disk location of resources")
   val webPinTtl = flag("zipkin.web.pinTtl", 30.days, "Length of time pinned traces should exist")

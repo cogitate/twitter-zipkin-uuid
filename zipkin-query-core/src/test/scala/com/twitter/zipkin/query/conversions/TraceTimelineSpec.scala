@@ -73,14 +73,11 @@ class TraceTimelineSpec extends Specification with JMocker with ClassMocker {
 
   val ba1 = BinaryAnnotation("key1", ByteBuffer.wrap("value1".getBytes), AnnotationType.String, None)
 
-  val span1 = Span(1, "ValuesFromSource", 2209720933601260005L, None,
-    List(ann3, ann6), List(ba1))
-  val span2 = Span(1, "ValuesFromSource", 2209720933601260005L, None,
-    List(ann4, ann1), Nil)
+  val span1 = Span(1, "ValuesFromSource", 2209720933601260005L, None, List(ann3, ann6), List(ba1))
+  val span2 = Span(1, "ValuesFromSource", 2209720933601260005L, None, List(ann4, ann1), Nil)
   // the above two spans are part of the same actual span
 
-  val span3 = Span(1, "multiget_slice", -855543208864892776L, Some(2209720933601260005L),
-    List(ann5, ann2), Nil)
+  val span3 = Span(1, "multiget_slice", -855543208864892776L, Some(2209720933601260005L), List(ann5, ann2), Nil)
   val trace = new Trace(List(span1, span2, span3))
 
   // annotation numbers match those above, order in list should not though

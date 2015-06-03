@@ -65,7 +65,7 @@ object Main extends App with ZipkinSpanGenerator {
     }
   }
 
-  private[this] def printTrace(traceIds: Seq[Long], client: thriftscala.ZipkinQuery[Future]): Future[Unit] = {
+  private[this] def printTrace(traceIds: Seq[String], client: thriftscala.ZipkinQuery[Future]): Future[Unit] = {
     client.getTracesByIds(traceIds, List(thriftscala.Adjust.TimeSkew)) map { traces =>
       for (trace <- traces; span <- trace.spans) yield
         println("Got span: " + span)

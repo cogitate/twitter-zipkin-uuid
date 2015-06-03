@@ -27,4 +27,4 @@ case class TraceCombo(
   trace: Trace,
   traceSummary: Option[TraceSummary],
   traceTimeline: Option[TraceTimeline],
-  spanDepths: Option[Map[Long, Int]])
+  spanDepths: Option[Map[String, Int]])

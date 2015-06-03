@@ -50,8 +50,7 @@ class RedisConversionsSpec extends Specification {
     }
 
     "convert from span and back" in {
-      val span = Span(rand.nextLong(), rand.nextString(8), rand.nextLong(),
-        Some(rand.nextLong()), List(), List())
+      val span = Span(rand.nextLong(), rand.nextString(8), rand.nextLong(), Some(rand.nextLong()), List(), List())
       deserializeSpan(serializeSpan(span)) mustEqual span
     }
   }
