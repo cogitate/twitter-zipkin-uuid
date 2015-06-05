@@ -139,7 +139,8 @@ class AnormSpanStore(
 
   private[this] def tracesExistSql(ids: Seq[String]) = SQL("""
     SELECT trace_id FROM zipkin_spans WHERE trace_id IN (%s)
-  """.format(ids.mkString(",")))
+    """.stripMargin.format(ids.map { id => "'"+id+"'"}.mkString(",")))
+  //""".format(ids.mkString(",")))
 
   def tracesExist(traceIds: Seq[String]): Future[Set[String]] = pool {
     tracesExistSql(traceIds)
@@ -156,8 +157,9 @@ class AnormSpanStore(
   private[this] def spansSql(ids: Seq[String]) = SQL("""
     |SELECT span_id, parent_id, trace_id, span_name, debug
     |FROM zipkin_spans
-    |WHERE trace_id IN (%s)
-  """.stripMargin.format(ids.mkString(",")))
+    |WHERE trace_id IN  (%s)
+    """.stripMargin.format(ids.map { id => "'"+id+"'"}.mkString(",")))
+    
 
   private[this] val spansResults = (
     str("span_id") ~
@@ -173,7 +175,7 @@ class AnormSpanStore(
     |SELECT span_id, trace_id, span_name, service_name, value, ipv4, port, a_timestamp, duration
     |FROM zipkin_annotations
     |WHERE trace_id IN (%s)
-  """.stripMargin.format(ids.mkString(",")))
+    """.stripMargin.format(ids.map { id => "'"+id+"'"}.mkString(",")))
 
   private[this] val annsResults = (
     str("span_id") ~
@@ -194,7 +196,7 @@ class AnormSpanStore(
     |  annotation_value, annotation_type_value, ipv4, port
     |FROM zipkin_binary_annotations
     |WHERE trace_id IN (%s)
-  """.stripMargin.format(ids.mkString(",")))
+    """.stripMargin.format(ids.map { id => "'"+id+"'"}.mkString(",")))
 
   private[this] val binAnnsResults = (
     str("span_id") ~
@@ -215,6 +217,10 @@ class AnormSpanStore(
   // parallel queries here are also a lie (see above).
   def getSpansByTraceIds(ids: Seq[String]): Future[Seq[Seq[Span]]] = {
     val spans = pool {
+      val sql = spansSql(ids)
+      println("SPAN_SQL "+sql)
+      val res = sql.as(spansResults *)
+      //println("results " + res)
       spansSql(ids).as(spansResults *)
     } map { _.distinct.groupBy(_.traceId) }
 
@@ -337,7 +343,8 @@ class AnormSpanStore(
     |FROM zipkin_spans
     |WHERE trace_id IN (%s) AND created_ts IS NOT NULL
     |GROUP BY trace_id
-  """.stripMargin.format(ids.mkString(",")))
+    """.stripMargin.format(ids.map { id => "'"+id+"'"}.mkString(",")))
+  //""".stripMargin.format(ids.mkString(",")))
 
   private[this] val byDurationResults = (
     str("trace_id") ~

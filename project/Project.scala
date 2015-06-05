@@ -50,7 +50,7 @@ object Zipkin extends Build {
   def algebird(name: String) = "com.twitter" %% ("algebird-" + name) % algebirdVersion
   def zk(name: String) = "com.twitter.common.zookeeper" % name % zookeeperVersions(name)
 
-  val twitterServer = "com.twitter" %% "twitter-server" % "1.9.0"
+  val twitterServer = "com.twitter" %% "twitter-server" % "1.10.0-SNAPSHOT"
 
   val proxyRepo = Option(System.getenv("SBT_PROXY_REPO"))
   val travisCi = Option(System.getenv("SBT_TRAVIS_CI")) // for adding travis ci maven repos before others
@@ -540,7 +540,8 @@ object Zipkin extends Build {
     libraryDependencies ++= Seq(
       finagle("zipkin"),
       finagle("stats"),
-      twitterServer
+      twitterServer,
+      "com.twitter" %% "finagle-http" % finagleVersion
     )
   ).dependsOn(
     tracegen, web, anormDB, query,

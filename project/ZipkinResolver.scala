@@ -56,6 +56,9 @@ object ZipkinResolver extends Plugin {
       )
     },
 
+    dependencyOverrides += "com.twitter" % "finagle-core" % finagleVersion,
+    dependencyOverrides += "com.twitter" % "finagle-httpx" % finagleVersion,
+    dependencyOverrides += "com.twitter" % "finagle-http" % finagleVersion,
     dependencyOverrides += "com.twitter" % "ostrich" % ostrichVersion,
     dependencyOverrides += "com.twitter" % "util-core" % utilVersion,
 

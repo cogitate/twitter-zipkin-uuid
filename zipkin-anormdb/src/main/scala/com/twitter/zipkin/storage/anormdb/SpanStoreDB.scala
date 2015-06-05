@@ -20,6 +20,7 @@ import anorm.SqlParser._
 import java.sql.{Blob, Connection, DriverManager, SQLException}
 
 case class SpanStoreDB(location: String) {
+  println("spanstoredb.location ["+location+"]")
   val (driver, blobType, autoIncrementSql) = location.split(":").toList match {
     case "sqlite" :: _ =>
       ("org.sqlite.JDBC", "BLOB", "INTEGER PRIMARY KEY AUTOINCREMENT")
@@ -53,6 +54,7 @@ case class SpanStoreDB(location: String) {
    * conn.close()
    */
   def getConnection() = {
+    println("getConnection.location ["+location+"]")
     DriverManager.getConnection("jdbc:" + location)
   }
 
@@ -103,9 +105,9 @@ case class SpanStoreDB(location: String) {
     if (clear) SQL("DROP TABLE IF EXISTS zipkin_spans").execute()
     SQL(
       """CREATE TABLE IF NOT EXISTS zipkin_spans (
-        |  span_id BIGINT NOT NULL,
-        |  parent_id BIGINT,
-        |  trace_id BIGINT NOT NULL,
+        |  span_id VARCHAR(255) NOT NULL,
+        |  parent_id VARCHAR(255),
+        |  trace_id VARCHAR(255) NOT NULL,
         |  span_name VARCHAR(255) NOT NULL,
         |  debug SMALLINT NOT NULL,
         |  duration BIGINT,
@@ -116,8 +118,8 @@ case class SpanStoreDB(location: String) {
     if (clear) SQL("DROP TABLE IF EXISTS zipkin_annotations").execute()
     SQL(
       """CREATE TABLE IF NOT EXISTS zipkin_annotations (
-        |  span_id BIGINT NOT NULL,
-        |  trace_id BIGINT NOT NULL,
+        |  span_id VARCHAR(255) NOT NULL,
+        |  trace_id VARCHAR(255) NOT NULL,
         |  span_name VARCHAR(255) NOT NULL,
         |  service_name VARCHAR(255) NOT NULL,
         |  value TEXT,
@@ -131,8 +133,8 @@ case class SpanStoreDB(location: String) {
     if (clear) SQL("DROP TABLE IF EXISTS zipkin_binary_annotations").execute()
     SQL(
       """CREATE TABLE IF NOT EXISTS zipkin_binary_annotations (
-        |  span_id BIGINT NOT NULL,
-        |  trace_id BIGINT NOT NULL,
+        |  span_id VARCHAR(255) NOT NULL,
+        |  trace_id VARCHAR(255) NOT NULL,
         |  span_name VARCHAR(255) NOT NULL,
         |  service_name VARCHAR(255) NOT NULL,
         |  annotation_key VARCHAR(255) NOT NULL,
