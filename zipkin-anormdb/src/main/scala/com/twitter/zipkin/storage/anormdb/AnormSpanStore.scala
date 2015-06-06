@@ -140,6 +140,8 @@ class AnormSpanStore(
   private[this] def tracesExistSql(ids: Seq[String]) = SQL("""
     SELECT trace_id FROM zipkin_spans WHERE trace_id IN (%s)
     """.stripMargin.format(ids.map { id => "'"+id+"'"}.mkString(",")))
+  // using string interpolation
+  //""".stripMargin.format(ids.map { id => s"'", $id, "'"}.mkString(",")))
   //""".format(ids.mkString(",")))
 
   def tracesExist(traceIds: Seq[String]): Future[Set[String]] = pool {
