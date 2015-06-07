@@ -17,7 +17,6 @@ project/plugins/src_managed/
 *.log
 *.tmproj
 *.ivyjars
-sbt-launch.jar
 .ensime
 .ensime_lucene
 .history
