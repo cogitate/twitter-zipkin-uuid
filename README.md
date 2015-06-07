@@ -6,6 +6,39 @@
 
 See [http://twitter.github.com/zipkin](http://twitter.github.com/zipkin)
 
+## UUID Work 
+
+TraceId, SpanId and ParentId are now UUID generated. 
+
+## Compiling and Running this version
+*  git clone the following:
+    * https://github.com/cogitate/twitter-util-uuid
+    * https://github.com/cogitate/twitter-finagle-uuid
+    * https://github.com/cogitate/twitter-ostrich-uuid
+    * https://github.com/cogitate/twitter-server-uuid
+
+* Then, git checkout uuid-work branch, in all the 4 projects above.
+    * compile order twitter-util-uuid, twitter-finagle-uuid, twitter-ostrich-uuid, twitter-server-uuid
+    * switch to uuid-work branch here and compile
+
+* Once everything compiles, you can run ./start-example.sh which will generate samples for sql-lite with UUID traces!
+    * You may run this with Cassandra as well by copying zipkin-example/src/main/scala/com/twitter/zipkin/example/Main.scala.Cassie to
+      zipkin-example/src/main/scala/com/twitter/zipkin/example/Main.scala
+
+## Help Required and Work To-do
+* Fix build scripts to run without switching to the branch (uuid-work)
+    * Make release versions for twitter-util-uuid, twitter-finagle-uuid, twitter-ostrich-uuid and twitter-server-uuid so they work
+      with twitter-zipkin-uuid
+      
+* Tests
+    * Need help fixing all the tests.
+
+* Suggested development changes
+    * TraceId, SpanId and ParentId should be type aliased to make future changes simple
+    * Rich implicits might be a better way to port than current port. But I am not a scala expert. 
+
+
+
 ## Get involved
 
 Check out the #zipkin IRC channel on chat.freenode.com to see if any
