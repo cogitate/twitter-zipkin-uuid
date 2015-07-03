@@ -1,1 +1,1 @@
-./bin/sbt "set offline := true" compile
+./sbt "set offline := true" compile
